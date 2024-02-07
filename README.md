@@ -1,0 +1,3 @@
+Skelbimų informacinė sistema yra platforma, kurioje vartotojai gali patogiai skelbti bei peržiūrėti skelbimus apie elektronines prekes, tokias kaip kompiuteriai, nešiojamieji įrenginiai ar kitas elektronines technologijas. Sistema suteikia naudotojams galimybę kurti skelbimus su detalia informacija apie prekę, įskaitant nuotraukas, technines specifikacijas bei kainą. Be to, vartotojai gali naršyti skelbimus pagal kategorijas ir savybes, lengvai peržiūrėti ir pirkti prekes. Sistema siekia sukurti patogią bei saugią aplinką elektroninių prekių prekybai tarp vartotojų.
+
+Trello nuoroda(User stories): https://trello.com/b/YjlnOqjt/user-story-mapping-template
