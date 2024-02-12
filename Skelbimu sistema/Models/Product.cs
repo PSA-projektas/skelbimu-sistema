@@ -1,9 +1,10 @@
 ﻿using Skelbimu_sistema.Data;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Skelbimu_sistema.Models
 {
-	public class Item
+	public class Product
 	{
 		[Key]
 		public int Id { get; set; }
@@ -20,7 +21,10 @@ namespace Skelbimu_sistema.Models
 
 		public string EndDate { get; set; }
 
-		public ItemCategory ItemCategory { get; set; }
+		public int CategoryId { get; set; }
+		[ForeignKey("CategoryId")]
+
+		public Category category { get; set; }
 
 	}
 }

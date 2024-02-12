@@ -1,6 +1,6 @@
 ﻿namespace Skelbimu_sistema.Data
 {
-	public enum ItemCategory
+	public enum Category
 	{
 		Motherboard,
 		CPU,
