@@ -14,7 +14,7 @@
     <header>
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
             <div class="container">
-                <a class="navbar-brand" asp-controller="Skelbimai" asp-action="Index">Elektroninė skelbimų sistema</a>
+                <a class="navbar-brand" asp-controller="Home" asp-action="Index">Elektroninė skelbimų sistema</a>
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
                         aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -22,19 +22,28 @@
                 <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                     <ul class="navbar-nav">
                         <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-controller="Authentication" asp-action="Registration">
+                                <i class="bi bi-person-plus"></i> Registracija
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" asp-area="" asp-controller="Skelbimai" asp-action="Index">
                                 <i class="bi bi-film"></i> Skelbimai
                             </a>
                         </li>
+                        <form class="form-inline my-2 my-lg-0" asp-controller="Item" asp-action="Filter">
+                            <div class="input-group"> <!-- Change from row to input-group -->
+                                <input name="searchString" type="text" class="form-control" placeholder="Ieškoti prekės..."
+                                       aria-label="Search" aria-describedby="searchButton">
+                                <div class="input-group-append"> <!-- Change from row to input-group-append -->
+                                    <button class="btn btn-outline-success" type="submit">
+                                        <i class="bi bi-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
                         <!-- Add other navigation items here -->
                     </ul>
-                    <form class="form-inline my-2 my-lg-0" asp-controller="Item" asp-action="Filter">
-                        <input name="searchString" type="text" class="form-control" placeholder="Ieškoti prekės..."
-                               aria-label="Search" aria-describedby="searchButton">
-                        <button class="btn btn-outline-success my-2 my-sm-0" type="submit">
-                            <i class="bi bi-search"></i>
-                        </button>
-                    </form>
                 </div>
             </div>
         </nav>
