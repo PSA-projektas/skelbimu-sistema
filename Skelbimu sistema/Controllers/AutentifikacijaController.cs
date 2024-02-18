@@ -2,9 +2,9 @@
 
 namespace Skelbimu_sistema.Controllers
 {
-    public class AuthenticationController : Controller
+    public class AutentifikacijaController : Controller
     {
-        public IActionResult Registration()
+        public IActionResult Registracija()
         {
             return View();
         }
