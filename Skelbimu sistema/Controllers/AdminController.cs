@@ -5,32 +5,29 @@ namespace Skelbimu_sistema.Controllers
 {
     public class AdminController : Controller
     {
-        private class MockUserRepo
-        {
-            public static List<User> GetUsers()
-            {
-                // Generate mock user data
-                var users = new List<User>
-                {
-                    new User { Id = 1, FirstName = "Steponas", LastName="Kairys", Email = "pastas@example.com", Blocked = false },
-                    new User { Id = 2, FirstName = "Antanas", LastName="Smetona", Email = "pastas@example.com", Blocked = false },
-                    new User { Id = 3, FirstName = "Vladas", LastName="Mironas", Email = "pastas@example.com", Blocked = true },
-                    new User { Id = 4, FirstName = "Jurgis", LastName="Šaulys", Email = "pastas@example.com", Blocked = true },
-                    // Add more mock users as needed
-                };
-
-                return users;
-            }
-        }
-
         public IActionResult Index()
         {
+            var users = MockUserRepo.GetUsers();
+
+            // Count the total number of users
+            ViewData["TotalUsers"] = users.Count;
+
+            // Count the number of blocked users
+            ViewData["BlockedUsers"] = users.Count(u => u.Blocked);
+
             return View();
         }
 
-        public IActionResult Users()
+        public IActionResult Users(string filter)
         {
             var users = MockUserRepo.GetUsers();
+
+            // Apply filtering based on the 'filter' query parameter
+            if (filter == "blocked")
+            {
+                users = users.Where(u => u.Blocked).ToList();
+            }
+
             return View(users); // Pass users to the view
         }
     }
