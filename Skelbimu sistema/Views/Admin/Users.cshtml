@@ -32,8 +32,8 @@
                         <td class="@(user.Blocked ? "text-danger" : "text-success")">@(user.Blocked ? "Taip" : "Ne")</td>
                         <td>
                             <a href="/user/details/@user.Id" title="Peržiūrėti naudotojo paskyrą"><i class="bi bi-file-person-fill"></i></a>
-                            <a href="/some-url" title="Peržiūrėti naudotojo skelbimus"><i class="bi bi-file-richtext-fill"></i></a>
-                            <a href="/some-url" title="Peržiūrėti naudotojo suspendavimus"><i class="bi bi-file-x-fill"></i></a>
+                            <a href="/admin/adverts?sellerId=@user.Id" title="Peržiūrėti naudotojo skelbimus"><i class="bi bi-file-richtext-fill"></i></a>
+                                <a href="/admin/adverts?sellerId=@user.Id&filter=suspended" title="Peržiūrėti naudotojo suspendavimus"><i class="bi bi-file-x-fill"></i></a>
                         </td>
                     </tr>
                 }
