@@ -1,10 +1,9 @@
-﻿using Skelbimu_sistema.Data;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Skelbimu_sistema.Models
 {
-	public class Product
+    public class Product
 	{
 		[Key]
 		public int Id { get; set; }

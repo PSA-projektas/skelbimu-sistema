@@ -1,7 +1,16 @@
+global using Microsoft.EntityFrameworkCore;
+global using Skelbimu_sistema.Models;
+global using Skelbimu_sistema.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddDbContext<DataContext>(options =>
+{
+	// The connection string is retrieved from the appsettings.json
+	options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+});
 
 var app = builder.Build();
 
@@ -14,6 +23,7 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
 app.UseStaticFiles();
 
 app.UseRouting();

@@ -1,0 +1,59 @@
+﻿@{
+	ViewData["Title"] = "Registracija";
+}
+
+@model Skelbimu_sistema.ViewModels.UserRegistrationRequest
+
+<div class="container mt-5">
+	<div class="row justify-content-center">
+		<div class="col-lg-8 col-md-10">
+			<div class="card">
+				<div class="card-body">
+					<h1 class="text-center">Registracija</h1>
+					<p class="text-center">Įveskite savo paskyros informaciją</p>
+					<form method="post" asp-action="SubmitRegistration">
+						<div class="form-group mb-3">
+							<label asp-for="Email">Elektroninis paštas:<span class="text-danger"> *</span></label>
+							<input asp-for="Email" type="email" class="form-control" required />
+							<span asp-validation-for="Email" class="text-danger"></span>
+						</div>
+						<div class="form-group mb-3">
+							<label asp-for="FirstName">Vardas:<span class="text-danger"> *</span></label>
+							<input asp-for="FirstName" type="text" class="form-control" required />
+							<span asp-validation-for="FirstName" class="text-danger"></span>
+						</div>
+						<div class="form-group mb-3">
+							<label asp-for="LastName">Pavardė:<span class="text-danger"> *</span></label>
+							<input asp-for="LastName" type="text" class="form-control" required />
+							<span asp-validation-for="LastName" class="text-danger"></span>
+						</div>
+						<div class="form-group mb-3">
+							<label asp-for="Password">Slaptažodis:<span class="text-danger"> *</span></label>
+							<input asp-for="Password" type="password" class="form-control" required />
+							<span asp-validation-for="Password" class="text-danger"></span>
+						</div>
+						<div class="form-group mb-3">
+							<label asp-for="ConfirmPassword">Patvirtinkite slaptažodį:<span class="text-danger"> *</span></label>
+							<input asp-for="ConfirmPassword" type="password" class="form-control" required />
+							<span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+						</div>
+						<div class="form-group mb-3">
+							<label asp-for="PhoneNumber">Telefono numeris:</label>
+							<input asp-for="PhoneNumber" type="tel" class="form-control" />
+							<span asp-validation-for="PhoneNumber" class="text-danger"></span>
+						</div>
+
+						<p class="small">* pažymėtus laukus užpildyti privaloma</p>
+
+						<button type="submit" class="btn btn-primary">Registruotis</button>
+					</form>
+					<div class="row mt-2">
+						<p>Jau turite paskyrą? <a class="nav-link" asp-area="" asp-controller="User" asp-action="Login">Prisijunkite</a></p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+
