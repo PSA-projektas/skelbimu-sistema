@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Azure.Core;
+using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using Skelbimu_sistema.Models;
 using Skelbimu_sistema.ViewModels;
 using System.Security.Cryptography;
@@ -55,21 +57,75 @@ namespace Skelbimu_sistema.Controllers
 			return RedirectToAction("Index", "Home"); // TODO: pass a success message
 		}
 
-		[HttpGet]
+		[HttpGet("prisijungimas")]
 		public IActionResult Login()
 		{
-			return View();
+			UserLoginRequest request = new UserLoginRequest();
+
+			return View(request);
 		}
 
-		[HttpPost]
-		public IActionResult LoginSubmit()
+		[HttpPost("prisijungti")]
+		public async Task<IActionResult> SubmitLogin(UserLoginRequest request)
 		{
-			// Retrieve form data directly from Request.Form collection
-			string email = Request.Form["email"];
-			string password = Request.Form["password"];
+			if (!ModelState.IsValid)
+			{
+				return View("Login", request);
+			}
 
-			return RedirectToAction("Index", "Home"); // Redirect to home page after login
+			var user = await _dataContext.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+
+			// Generic error message used to not give away too much information
+			var errorMessage = "Prisijungti nepavyko. Patikrinkite savo pašto adresą ir slaptažodį";
+
+			if (user == null)
+			{
+				ModelState.AddModelError("Email", errorMessage);
+				return View("Login", request);
+			}
+
+			// TODO: implement email verification
+			//if (user.VerificationDate == null)
+			//{
+			//	ModelState.AddModelError("Email", "Naudotojas nėra patvirtintas");
+			//	return View("Login", request);
+			//}
+
+			if (!VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt))
+			{
+				ModelState.AddModelError("Email", errorMessage);
+				return View("Login", request);
+			}
+
+			// Create a cookie with user's information
+			var userInfo = new { Id = user.Id, Email = user.Email, FirstName = user.FirstName, LastName = user.LastName, PhoneNumber = user.PhoneNumber };
+			var userCookieValue = JsonConvert.SerializeObject(userInfo);
+			var cookieOptions = new CookieOptions
+			{
+				Expires = DateTime.UtcNow.AddHours(2), // Set cookie expiration date
+				HttpOnly = true // Ensure the cookie is only accessible via HTTP(S)
+			};
+
+			// Add it to storage
+			HttpContext.Response.Cookies.Append("User", userCookieValue, cookieOptions);
+
+			return RedirectToAction("Index", "Home"); // TODO: pass a success message
 		}
+
+		[HttpPost("atsijungti")]
+		public IActionResult SubmitLogout()
+		{
+			var userCookie = HttpContext.Request.Cookies["User"];
+
+			if (!string.IsNullOrEmpty(userCookie))
+			{
+				// Remove the user cookie
+				HttpContext.Response.Cookies.Delete("User");
+			}
+
+			return RedirectToAction("Index", "Home"); // TODO: pass a success message
+		}
+
 		public IActionResult Index()
 		{
 			return View();
@@ -94,6 +150,15 @@ namespace Skelbimu_sistema.Controllers
 			{
 				passwordSalt = hmac.Key;
 				passwordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+			}
+		}
+
+		private bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
+		{
+			using (var hmac = new HMACSHA512(passwordSalt))
+			{
+				var computedHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+				return computedHash.SequenceEqual(passwordHash);
 			}
 		}
 

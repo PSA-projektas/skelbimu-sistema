@@ -2,6 +2,8 @@
 	ViewData["Title"] = "Prisijungimas";
 }
 
+@model Skelbimu_sistema.ViewModels.UserLoginRequest
+
 <div class="container mt-5">
 	<div class="row justify-content-center">
 		<div class="col-lg-8 col-md-10">
@@ -9,19 +11,21 @@
 				<div class="card-body">
 					<h1 class="text-center">Prisijungimas</h1>
 					<p class="text-center">Įveskite savo prisijungimo duomenis</p>
-					<form method="post" action="/auth/loginsubmit">
+					<form method="post" asp-action="SubmitLogin">
 						<div class="form-group mb-3">
-							<label for="email">Elektroninis paštas:</label>
-							<input type="email" class="form-control" id="email" name="email" required />
+							<label asp-for="Email">Elektroninis paštas:</label>
+							<input asp-for="Email" type="email" class="form-control" required />
+							<span asp-validation-for="Email" class="text-danger"></span>
 						</div>
 						<div class="form-group mb-3">
-							<label for="password">Slaptažodis:</label>
-							<input type="password" class="form-control" id="password" name="password" required />
+							<label asp-for="Password">Slaptažodis:</label>
+							<input asp-for="Password" type="password" class="form-control" required />
+							<span asp-validation-for="Password" class="text-danger"></span>
 						</div>
 						<button type="submit" class="btn btn-primary">Prisijungti</button>
 					</form>
 					<div class="row mt-2">
-						<p>Dar neturite paskyros? <a href="/auth/registration">Užsiregistruokite</a></p>
+						<p>Dar neturite paskyros? <a asp-area="" asp-controller="User" asp-action="Registration">Užsiregistruokite</a></p>
 					</div>
 				</div>
 			</div>
