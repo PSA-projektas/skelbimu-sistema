@@ -5,7 +5,7 @@
 <div class="container mt-5">
 	<div class="row">
 		<div class="col-4">
-			<a href="/admin/users" class="btn btn-primary btn-block d-flex w-100 h-100 align-items-center justify-content-center">
+			<a asp-controller="Admin" asp-action="Users" class="btn btn-primary btn-block d-flex w-100 h-100 align-items-center justify-content-center">
 				<i class="bi bi-people-fill mx-2"></i>
 				<strong>Peržiūrėti naudotojus</strong>
 				
@@ -13,13 +13,13 @@
 		</div>
 		<div class="col-8">
 			<div class="row mb-2">
-				<a href="/admin/users?filter=blocked" class="btn btn-primary btn-block d-flex w-100 align-items-center justify-content-center p-2">Užblokuotų naudotojų: @ViewData["BlockedUsers"]</a>
+				<a asp-controller="Admin" asp-action="Users" asp-route-filter="blocked" class="btn btn-primary btn-block d-flex w-100 align-items-center justify-content-center p-2">Užblokuotų naudotojų: @ViewData["BlockedCount"]</a>
 			</div>
 			<div class="row mb-2">
-				<p class="w-100 h-100 text-center bg-light mb-0 p-2 rounded">Iš viso nudotojų: @ViewData["TotalUsers"]</p>
+				<p class="w-100 h-100 text-center bg-light mb-0 p-2 rounded">Iš viso nudotojų: @ViewData["UsersCount"]</p>
 			</div>
 			<div class="row">
-				<p class="w-100 h-100 text-center bg-light mb-0 p-2 rounded">Administratorių: 1</p>
+				<p class="w-100 h-100 text-center bg-light mb-0 p-2 rounded">Administratorių: @ViewData["AdminsCount"]</p>
 			</div>
 		</div>
 	</div>

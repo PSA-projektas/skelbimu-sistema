@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Skelbimu_sistema.Models;
+using Skelbimu_sistema.ViewModels;
 using System.Diagnostics;
 
 namespace Skelbimu_sistema.Controllers

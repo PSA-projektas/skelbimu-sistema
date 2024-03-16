@@ -20,18 +20,17 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var advert in Model)
+            @for(int i = 0; i < 5; i++)
             {
                         <tr>
-                            <td>@advert.Id</td>
-                            <td>@advert.Title</td>
-                                <td><a href="/admin/adverts?sellerId=@advert.SellerId">@advert.SellerName</a></td>
-                            <td>@advert.Suspended</td>
-                            <td>@advert.NumberOfReports</td>
+                            <td>@i</td>
+                            <td>Skelbimo pavadinimas</td>
+                            <td><a href="/admin/adverts?sellerId=1">Pardavėjo vardas ir pavardė</a></td>
+                            <td>Ne</td>
+                            <td>@i</td>
                             <td>
-                                <a href="/user/details/@advert.SellerId" title="Peržiūrėti pardavėjo paskyrą"><i class="bi bi-file-person-fill"></i></a>
-                                <a href="/admin/adverts" title="Peržiūrėti skelbimą"><i class="bi bi-file-richtext-fill"></i></a>
-                                <a href="/admin/adverts" title="Peržiūrėti skelbimo perspėjimus"><i class="bi bi-file-x-fill"></i></a>
+                                <a href="/user/details/1" title="Peržiūrėti pardavėjo paskyrą"><i class="bi bi-file-person-fill"></i></a>
+                                <a href="/admin/adverts" title="Peržiūrėti skelbimo administracinę informaciją"><i class="bi bi-file-richtext-fill"></i></a>
                             </td>
                         </tr>
             }
