@@ -11,6 +11,9 @@
 </head>
 
 <body>
+    @{
+        var userCookie = Context.Request.Cookies["User"];
+    }
     <header>
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
             <div class="container">
@@ -21,16 +24,7 @@
                 </button>
                 <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                     <ul class="navbar-nav">
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Auth" asp-action="Login">
-                                <i class="bi bi-person-check"></i> Prisijungti
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Auth" asp-action="Registration">
-                                <i class="bi bi-person-plus"></i> Registruotis
-                            </a>
-                        </li>
+                        
                         <li class="nav-item">
                             <a class="nav-link" asp-area="" asp-controller="Products" asp-action="List">
                                 <i class="bi bi-film"></i> Skelbimai
@@ -52,7 +46,30 @@
                                 <i class="bi bi-wrench"></i> Administracija
                             </a>
                         </li>
-                        <!-- Add other navigation items here -->
+
+                        @if (string.IsNullOrEmpty(userCookie))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-controller="User" asp-action="Login">
+                                    <i class="bi bi-person-check"></i> Prisijungti
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-controller="User" asp-action="Registration">
+                                    <i class="bi bi-person-plus"></i> Registruotis
+                                </a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                    <form method="post" asp-controller="User" asp-action="SubmitLogout">
+                                    <button type="submit" class="nav-link" style="border: none; background-color: transparent;">
+                                        <i class="bi bi-person-x"></i> Atsijungti
+                                    </button>
+                                </form>
+                            </li>
+                        }
                     </ul>
                 </div>
             </div>

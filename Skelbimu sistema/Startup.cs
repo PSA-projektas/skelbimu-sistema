@@ -12,7 +12,7 @@ namespace Skelbimu_sistema
         public IConfiguration Configuration { get; }
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<AppDbContext>(options =>
+            services.AddDbContext<DataContext>(options =>
                            options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
             services.AddControllersWithViews();
         }
