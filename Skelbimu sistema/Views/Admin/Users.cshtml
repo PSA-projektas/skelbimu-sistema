@@ -8,7 +8,7 @@
     <h1 class="text-center">Naudotojai</h1>
     <p class="text-center">Sistemos naudotojų sąrašas.</p>
     <div class="row px-3 mb-2">
-        <a class="btn btn-primary" href="/Admin/Users">Valyti filtrus</a>
+        <a class="btn btn-primary" asp-controller="Admin" asp-action="Users">Valyti filtrus</a>
     </div>
     <table class="table table-striped table-bordered table-hover">
         <thead class="bg-primary text-white">
@@ -17,7 +17,7 @@
                 <th>Vardas</th>
                 <th>Pavardė</th>
                 <th>Elektroninis paštas</th>
-                <th><a class="text-white" href="/Admin/Users?filter=blocked">Užblokuotas</a></th>
+                <th><a class="text-white" asp-controller="Admin" asp-action="Users" asp-route-filter="blocked">Užblokuotas</a></th>
                 <th>Veiksmai</th>
             </tr>
         </thead>

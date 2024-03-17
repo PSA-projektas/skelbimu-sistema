@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 
 namespace Skelbimu_sistema.Controllers
 {
+	// TODO: rewrite to use authentication and signinmanager with usermanager
 	[Route("naudotojas")]
 	public class UserController : Controller
 	{
