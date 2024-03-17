@@ -44,38 +44,14 @@ namespace Skelbimu_sistema.Controllers
         }
 
         [HttpGet("administracija/skelbimai")]
-        public IActionResult Adverts(string filter, int? sellerId)
+        public IActionResult Products(string filter, int? sellerId)
         {
-            //var adverts = MockAdvertRepo.GetAdverts();
-            //var users = MockUserRepo.GetUsers(); // Assuming you have a method to get users
+            return View();
+        }
 
-            //// Join adverts with users to get user names
-            //var advertsWithSellers = from advert in adverts
-            //                         join user in users on advert.User equals user.Id
-            //                         select new
-            //                         {
-            //                             Id = advert.Id,
-            //                             Title = advert.Title,
-            //                             Suspended = advert.Suspended,
-            //                             NumberOfReports = advert.NumberOfReports,
-            //                             SellerId = user.Id,
-            //                             SellerName = user.FirstName + user.LastName
-            //                         };
-
-            //if (filter == "suspended")
-            //{
-            //    advertsWithSellers = advertsWithSellers.Where(a => a.Suspended).ToList();
-            //}
-            //else if (filter == "reported")
-            //{
-            //    advertsWithSellers = advertsWithSellers.Where(a => a.NumberOfReports > 0).ToList();
-            //}
-            //if (sellerId != null)
-            //{
-            //    advertsWithSellers = advertsWithSellers.Where(a => a.SellerId == sellerId).ToList();
-            //}
-
-            //return View(advertsWithSellers);
+        [HttpGet("administracija/skelbimai/{productId}")]
+        public IActionResult ProductDetails(int productId)
+        {
             return View();
         }
     }

@@ -25,7 +25,7 @@
 	</div>
 	<div class="row mt-4">
 		<div class="col-4">
-			<a href="/admin/adverts" class="btn btn-primary btn-block d-flex w-100 h-100 align-items-center justify-content-center">
+			<a asp-controller="Admin" asp-action="Products" class="btn btn-primary btn-block d-flex w-100 h-100 align-items-center justify-content-center">
 				<i class="bi bi-file-post-fill mx-2"></i>
 				<strong>Peržiūrėti skelbimus</strong>
 
@@ -33,13 +33,13 @@
 		</div>
 		<div class="col-8">
 			<div class="row mb-2">
-				<a href="/admin/adverts?filter=suspended" class="btn btn-primary btn-block">Suspenduotų skelbimų: 2</a>
+				<a asp-controller="Admin" asp-action="Products" asp-route-filter="suspended" class="btn btn-primary btn-block">Suspenduotų skelbimų: 2</a>
 			</div>
 			<div class="row mb-2">
-				<a href="/admin/adverts?filter=corrected" class="btn btn-primary btn-block">Pataisytų skelbimų: 1</a>
+				<a asp-controller="Admin" asp-action="Products" asp-route-filter="corrected" class="btn btn-primary btn-block">Pataisytų skelbimų: 1</a>
 			</div>
 			<div class="row">
-				<a href="/admin/adverts?filter=reported" class="btn btn-primary btn-block">Skelbimų su perspėjimais: 4</a>
+				<a asp-controller="Admin" asp-action="Products" asp-route-filter="reported" class="btn btn-primary btn-block">Skelbimų su perspėjimais: 4</a>
 			</div>
 		</div>
 	</div>
