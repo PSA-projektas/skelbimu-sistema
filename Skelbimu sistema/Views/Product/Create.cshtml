@@ -10,89 +10,83 @@
     <div class="container">
         <h2 class="text-center">Skelbimo kūrimas</h2>
 
-        
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <form method="post" asp-action="SubmitCreate">
+                    <hr />
+                    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
 
-            <div class="row justify-content-center">
-                <div class="col-md-8">
-                    <form method="post" asp-action="SubmitCreate">
-                        <hr />
-                        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
-
-                        <!-- Product fields -->
-                        <div class="form-group">
-                            <label asp-for="Name" class="control-label col-md-2"></label>
-                            <div class="text-center">
-                                <input asp-for="Name" class="form-control" />
-                                <span asp-validation-for="Name" class="text-danger"></span>
-                            </div>
+                    <!-- Product fields -->
+                    <div class="form-group row">
+                        <label asp-for="Name" class="control-label col-md-2">Pavadinimas:</label>
+                        <div class="col-md-10">
+                            <input asp-for="Name" class="form-control" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
                         </div>
+                    </div>
 
-                        <div class="form-group">
-                            <label asp-for="Description" class="control-label col-md-2"></label>
-                            <div class="text-center">
-                                <input asp-for="Description" class="form-control" />
-                                <span asp-validation-for="Description" class="text-danger"></span>
-                            </div>
+                    <div class="form-group row">
+                        <label asp-for="Description" class="control-label col-md-2">Aprašymas:</label>
+                        <div class="col-md-10">
+                            <input asp-for="Description" class="form-control" />
+                            <span asp-validation-for="Description" class="text-danger"></span>
                         </div>
+                    </div>
 
-                        <div class="form-group">
-                            <label asp-for="Price" class="control-label col-md-2"></label>
-                            <div class="text-center">
-                                <input asp-for="Price" class="form-control" />
-                                <span asp-validation-for="Price" class="text-danger"></span>
-                            </div>
+                    <div class="form-group row">
+                        <label asp-for="Price" class="control-label col-md-2">Kaina:</label>
+                        <div class="col-md-10">
+                            <input asp-for="Price" class="form-control" />
+                            <span asp-validation-for="Price" class="text-danger"></span>
                         </div>
+                    </div>
 
-                        <div class="form-group">
-                            <label asp-for="ImageUrl" class="control-label col-md-2"></label>
-                            <div class="text-center">
-                                <input asp-for="ImageUrl" class="form-control" />
-                                <span asp-validation-for="ImageUrl" class="text-danger"></span>
-                            </div>
+                    <div class="form-group row">
+                        <label asp-for="ImageUrl" class="control-label col-md-2">Nuotraukos URL:</label>
+                        <div class="col-md-10">
+                            <input asp-for="ImageUrl" class="form-control" />
+                            <span asp-validation-for="ImageUrl" class="text-danger"></span>
                         </div>
+                    </div>
 
-                    <div class="form-group">
-                        <label asp-for="StartDate" class="control-label col-md-2"></label>
-                        <div class="text-center">
+                    <div class="form-group row">
+                        <label asp-for="StartDate" class="control-label col-md-2">Pradžios data:</label>
+                        <div class="col-md-10">
                             <input asp-for="StartDate" class="form-control" type="date" min="@DateTime.Now.ToString("yyyy-MM-dd")" />
                             <span asp-validation-for="StartDate" class="text-danger"></span>
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label asp-for="EndDate" class="control-label col-md-2"></label>
-                        <div class="text-center">
+                    <div class="form-group row">
+                        <label asp-for="EndDate" class="control-label col-md-2">Pabaigos data:</label>
+                        <div class="col-md-10">
                             <input asp-for="EndDate" class="form-control" type="date" min="@DateTime.Now.ToString("yyyy-MM-dd")" />
                             <span asp-validation-for="EndDate" class="text-danger"></span>
                         </div>
                     </div>
 
-
-                        <div class="form-group">
-                            <label asp-for="Category" class="control-label col-md-2"></label>
-                            <div class="text-center">
-                                <select asp-for="Category" class="form-control">
-                                    <option value="">Pasirinkite kategoriją</option>
-                                    @foreach (var category in Html.GetEnumSelectList<Category>())
-                                    {
-                                        <option value="@category.Value">@category.Text</option>
-                                    }
-                                </select>
-                                <span asp-validation-for="Category" class="text-danger"></span>
-                            </div>
+                    <div class="form-group row">
+                        <label asp-for="Category" class="control-label col-md-2">Kategorija:</label>
+                        <div class="col-md-10">
+                            <select asp-for="Category" class="form-control">
+                                <option value="">Pasirinkite kategoriją</option>
+                                @foreach (var category in Html.GetEnumSelectList<Category>())
+                                {
+                                    <option value="@category.Value">@category.Text</option>
+                                }
+                            </select>
+                            <span asp-validation-for="Category" class="text-danger"></span>
                         </div>
+                    </div>
 
-                        <div class="row justify-content-center">
-                            <div class="row justify-content-center">
-                                <button type="submit" class="btn btn-primary">Kurti</button>
-
-                            </div>
+                    <div class="row justify-content-center">
+                        <div class="col-md-12 text-center">
+                            <button type="submit" class="btn btn-primary">Kurti</button>
                         </div>
-                    </form>
-
-                </div>
+                    </div>
+                </form>
             </div>
-        
+        </div>
 
         <div class="row justify-content-center">
             <div class="col-md-8 text-center">
