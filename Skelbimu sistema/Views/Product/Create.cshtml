@@ -1,0 +1,107 @@
+﻿@model Skelbimu_sistema.ViewModels.ProductCreationRequest
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Skelbimo kūrimo langas</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+
+    <div class="container">
+        <h2 class="text-center">Skelbimo kūrimas</h2>
+
+        
+
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <form method="post" asp-action="SubmitCreate">
+                        <hr />
+                        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+                        <!-- Product fields -->
+                        <div class="form-group">
+                            <label asp-for="Name" class="control-label col-md-2"></label>
+                            <div class="text-center">
+                                <input asp-for="Name" class="form-control" />
+                                <span asp-validation-for="Name" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="Description" class="control-label col-md-2"></label>
+                            <div class="text-center">
+                                <input asp-for="Description" class="form-control" />
+                                <span asp-validation-for="Description" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="Price" class="control-label col-md-2"></label>
+                            <div class="text-center">
+                                <input asp-for="Price" class="form-control" />
+                                <span asp-validation-for="Price" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="ImageUrl" class="control-label col-md-2"></label>
+                            <div class="text-center">
+                                <input asp-for="ImageUrl" class="form-control" />
+                                <span asp-validation-for="ImageUrl" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                    <div class="form-group">
+                        <label asp-for="StartDate" class="control-label col-md-2"></label>
+                        <div class="text-center">
+                            <input asp-for="StartDate" class="form-control" type="date" min="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                            <span asp-validation-for="StartDate" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="EndDate" class="control-label col-md-2"></label>
+                        <div class="text-center">
+                            <input asp-for="EndDate" class="form-control" type="date" min="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                            <span asp-validation-for="EndDate" class="text-danger"></span>
+                        </div>
+                    </div>
+
+
+                        <div class="form-group">
+                            <label asp-for="Category" class="control-label col-md-2"></label>
+                            <div class="text-center">
+                                <select asp-for="Category" class="form-control">
+                                    <option value="">Pasirinkite kategoriją</option>
+                                    @foreach (var category in Html.GetEnumSelectList<Category>())
+                                    {
+                                        <option value="@category.Value">@category.Text</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="Category" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row justify-content-center">
+                            <div class="row justify-content-center">
+                                <button type="submit" class="btn btn-primary">Kurti</button>
+
+                            </div>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        
+
+        <div class="row justify-content-center">
+            <div class="col-md-8 text-center">
+                <form id="backForm" method="get" action="@Url.Action("Index", "Home")">
+                    <button type="submit" class="btn btn-secondary mt-3">Sugrįžti atgal</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
