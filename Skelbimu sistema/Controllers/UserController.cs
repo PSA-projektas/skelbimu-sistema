@@ -167,5 +167,7 @@ namespace Skelbimu_sistema.Controllers
 		{
 			return Convert.ToHexString(RandomNumberGenerator.GetBytes(64));
 		}
+
+
 	}
 }
