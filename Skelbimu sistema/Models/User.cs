@@ -19,6 +19,6 @@ namespace Skelbimu_sistema.Models
         public DateTime? VerificationDate { get; set; }
         public string? PasswordResetToken { get; set; }
         public DateTime? ResetTokenExpirationDate { get; set; }
-        public string? SearchKeyWords { get; set; } = /*string.Empty*/ "Pelė";
+        public string? SearchKeyWords { get; set; } = string.Empty;
     }
 }
