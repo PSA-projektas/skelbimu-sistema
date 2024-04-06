@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Skelbimu_sistema.Models;
 using Skelbimu_sistema.ViewModels;
+using System.Security.Claims;
 using System.Security.Cryptography;
 
 namespace Skelbimu_sistema.Controllers
@@ -13,6 +14,8 @@ namespace Skelbimu_sistema.Controllers
     public class ProductController : Controller
     {
         private readonly DataContext _dataContext;
+        private readonly int cookieExpirationTime = 7; // Days
+        private readonly int userSearchHistorySize = 256;
 
         public ProductController(DataContext dataContext)
         {
@@ -26,8 +29,6 @@ namespace Skelbimu_sistema.Controllers
 
             return View(request);
         }
-
-
 
         [HttpPost("kurti")]
         [ValidateAntiForgeryToken]
@@ -61,6 +62,7 @@ namespace Skelbimu_sistema.Controllers
         }
 
         //write me a method that will return one product by id
+        [Route("product/details")]
         public IActionResult Details(int id)
         {
             // Retrieve the product by id
@@ -74,13 +76,126 @@ namespace Skelbimu_sistema.Controllers
             return View(product); // Return the product details view
         }
 
-        // Helper method to get the current user's ID (adapt this based on your auth)
-        private int GetCurrentUserId()
+        /// <summary>
+        /// Returns logged in user's id
+        /// </summary>
+        /// <returns>Id</returns>
+        public int GetCurrentUserId()
         {
-            // Implementation depending on your authentication system 
-            // Ex: return int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-            throw new NotImplementedException("Update this with your user ID retrieval logic");
+            // Retrieve user cookie
+            var userCookie = HttpContext.Request.Cookies["User"];
+
+            if (!string.IsNullOrEmpty(userCookie))
+            {
+                // Parse user ID from cookie
+                var userInfo = JsonConvert.DeserializeObject<dynamic>(userCookie);
+                int userId = userInfo.Id;
+
+                return userId;
+            }
+            else
+            {
+                // User is not authenticated or user cookie is not found, return -1
+                return -1;
+            }
         }
-        
+
+
+        /// <summary>
+        /// Filter action when search button is pressed
+        /// </summary>
+        /// <param name="searchString">User search words</param>
+        /// <returns>View</returns>
+        [Route("product/filter")]
+        public IActionResult Filter(string searchString)
+        {
+            int userId = GetCurrentUserId();
+
+            // Check if user is logged in
+            if (userId >= 0)
+            {
+                // Save search history
+                SaveSearchHistory(searchString, userId);
+
+                // TO DO: Need to implement new view to show filterred list
+                return RedirectToAction("Index", "Home");
+            }
+            else // Redirect to login page
+            {               
+                return RedirectToAction("Login", "User");
+            }
+        }
+
+        /// <summary>
+        /// Saves user search to cookie and database
+        /// </summary>
+        /// <param name="searchString">User search words</param>
+        private void SaveSearchHistory(string searchString, int userId)
+        {
+            // Retrieve the search history cookie for the current user
+            var searchHistoryCookie = Request.Cookies["SearchHistory_" + userId];
+            List<string> searchHistory = new List<string>();
+
+            if (searchHistoryCookie != null && !string.IsNullOrEmpty(searchHistoryCookie))
+            {
+                // Deserialize search history from cookie
+                searchHistory = searchHistoryCookie.Split(',').ToList();
+            }
+
+            // Add the current search to the search history
+            if (!string.IsNullOrEmpty(searchString) && !searchHistory.Contains(searchString))
+            {
+                searchHistory.Add(searchString);
+            }
+
+            // Update the search history cookie for the current user
+            Response.Cookies.Append("SearchHistory_" + userId, string.Join(',', searchHistory), new Microsoft.AspNetCore.Http.CookieOptions
+            {
+                Expires = DateTimeOffset.Now.AddDays(cookieExpirationTime)
+            });
+
+            // Save the search history to the database for the current user
+            SaveSearchToDatabase(searchString, userId);
+        }
+
+
+        /// <summary>
+        /// Saves user search phrase into database
+        /// </summary>
+        /// <param name="searchString">User search words</param>
+        /// <param name="userId">User id</param>
+        private void SaveSearchToDatabase(string searchString, int userId)
+        {
+            var currentUser = _dataContext.Users.FirstOrDefault(p => p.Id == userId);
+            if (currentUser != null)
+            {
+                string newKeywords = currentUser.SearchKeyWords + searchString + ",";
+
+                // Check if the total length exceeds the limit
+                if (newKeywords.Length >= userSearchHistorySize)
+                {
+                    // Find the index of the delimiter within the excess characters
+                    int delimiterIndex = newKeywords.IndexOf(',', newKeywords.Length - (newKeywords.Length - userSearchHistorySize));
+
+                    // If delimiterIndex is -1, it means there's no delimiter within the excess characters,
+                    // in this case, truncate the string to 'userSearchHistorySize' characters
+                    if (delimiterIndex == -1)
+                    {
+                        newKeywords = newKeywords.Substring(0, 256);
+                    }
+                    else
+                    {
+                        // Remove characters from the beginning until the delimiter (including the delimiter)
+                        newKeywords = newKeywords.Substring(delimiterIndex + 1);
+                    }
+                }
+
+                currentUser.SearchKeyWords = newKeywords;
+                _dataContext.SaveChanges();
+            }
+        }
+
+
     }
+
 }

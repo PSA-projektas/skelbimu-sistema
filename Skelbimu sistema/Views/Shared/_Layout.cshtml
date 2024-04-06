@@ -30,18 +30,8 @@
                                 <i class="bi bi-film"></i> Skelbimai
                             </a>
                         </li>
-                        @* <form class="form-inline my-2 my-lg-0" asp-controller="Item" asp-action="Filter">
-                            <div class="input-group"> <!-- Change from row to input-group -->
-                                <input name="searchString" type="text" class="form-control" placeholder="Ieškoti prekės..."
-                                       aria-label="Search" aria-describedby="searchButton">
-                                <div class="input-group-append"> <!-- Change from row to input-group-append -->
-                                    <button class="btn btn-outline-success" type="submit">
-                                        <i class="bi bi-search"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </form>  *@
-                        <form id="searchForm" class="form-inline my-2 my-lg-0" asp-controller="Wish" asp-action="SaveSearchToKeyWordsList" method="post">
+
+                        <form id="searchForm" class="form-inline my-2 my-lg-0" asp-controller="Product" asp-action="Filter" method="get">
                             <div class="input-group">
                                 <input id="searchInput" name="searchString" type="text" class="form-control" placeholder="Ieškoti prekės..."
                                        aria-label="Search" aria-describedby="searchButton">
@@ -52,6 +42,8 @@
                                 </div>
                             </div>
                         </form>
+
+                       
 
 
                         <li class="nav-item">

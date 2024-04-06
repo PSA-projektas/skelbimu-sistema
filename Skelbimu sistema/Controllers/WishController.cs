@@ -12,8 +12,6 @@ using Microsoft.AspNetCore.Http;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Text;
-using System.Globalization;
-using System.Text.RegularExpressions;
 
 namespace Skelbimu_sistema.Controllers
 {
@@ -34,8 +32,32 @@ namespace Skelbimu_sistema.Controllers
         [HttpGet("suggestionPage")]
         public IActionResult OpenSuggestedProductsPage()
         {
-            List<Product> suggestions = CreateSuggestionsBySearch(); 
+            List<Product> suggestions = CreateSuggestionsBySearch();
             return View("SuggestionList", suggestions); 
+        }
+
+        /// <summary>
+        /// Returns logged in user's id
+        /// </summary>
+        /// <returns>Id</returns>
+        public int GetCurrentUserId()
+        {
+            // Retrieve user cookie
+            var userCookie = HttpContext.Request.Cookies["User"];
+
+            if (!string.IsNullOrEmpty(userCookie))
+            {
+                // Parse user ID from cookie
+                var userInfo = JsonConvert.DeserializeObject<dynamic>(userCookie);
+                int userId = userInfo.Id;
+
+                return userId;
+            }
+            else
+            {
+                // User is not authenticated or user cookie is not found, return -1
+                return -1;
+            }
         }
 
         /// <summary>
@@ -43,31 +65,42 @@ namespace Skelbimu_sistema.Controllers
         /// </summary>
         /// <returns>list of words</returns>
         public List<string> SelectKeyWords()
-        {
+        {                    
+            // Get the current user ID
+            int userId = GetCurrentUserId();
+
+            // If user is not logged in, return an empty list
+            if (userId == -1)
+            {
+                return new List<string>();
+            }
+
+            // Retrieve the search history cookie for the current user
             /*
-            // Get the current user's ID from HttpContext
-            string userId = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var searchHistoryCookie = Request.Cookies["SearchHistory_" + userId];
 
-            // Assuming you have a way to retrieve user data based on their ID
-            User user = null;
-            if (int.TryParse(userId, out int userIdInt))
+            List<string> searchHistory = new List<string>();
+
+            if (searchHistoryCookie != null && !string.IsNullOrEmpty(searchHistoryCookie))
             {
-                user = _dataContext.Users.FirstOrDefault(u => u.Id == userIdInt);
+                // Deserialize search history from cookie
+                searchHistory = searchHistoryCookie.Split(',').ToList();
             }
-
-            if (user != null)
-            {
-                // Assuming SearchKeyWords is a property of the User model
-                List<string> keyWords = user.SearchKeyWords.Split(' ').ToList();               
-                return keyWords;
-            }
-
-            // If user is not found or doesn't have search keywords, return an empty list
-            return new List<string>();
             */
 
-            return new List<string> { "Pele"};
+            // Retrieve data from user's search history attribute
+            var currentUser = _dataContext.Users.FirstOrDefault(p => p.Id == userId);
+            List<string> searchWordsList = new List<string>();
+            if (currentUser != null)
+            {
+                string searchWords = currentUser.SearchKeyWords;
+                string[] searchWordsArray = searchWords.Split(new char[] { ',', ' ' }, 
+                                            StringSplitOptions.RemoveEmptyEntries);
+                searchWordsList = new List<string>(searchWordsArray);
+            }
+            return searchWordsList;
         }
+
 
         /// <summary>
         /// Creates product list based on user's search
@@ -84,7 +117,7 @@ namespace Skelbimu_sistema.Controllers
             {          
                 if (ValidateProductForSuggestion(product, keywords))
                 {
-                    suggestions.Add(product); 
+                    suggestions.Add(product);
                 }
             }
 
@@ -113,37 +146,8 @@ namespace Skelbimu_sistema.Controllers
                     return true;
                 }
             }
-
             return false;
         }
-
-
-
-        /// <summary>
-        /// Adds search input string to key words list
-        /// </summary>
-        /// <param name="searchString">Input string</param>
-        /// <returns>Success message</returns>
-        [HttpPost]
-        public IActionResult SaveSearchToKeyWordsList(string searchString)
-        {
-            string userId = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            User user = null;
-            if (int.TryParse(userId, out int userIdInt))
-            {
-                user = _dataContext.Users.FirstOrDefault(u => u.Id == userIdInt);
-            }
-
-            if (user != null)
-            {
-                user.SearchKeyWords = user.SearchKeyWords + " " + searchString;
-                _dataContext.SaveChanges();
-            }
-
-            return RedirectToAction("OpenSuggestedProductsPage"); 
-        }
-
 
     }
 }
