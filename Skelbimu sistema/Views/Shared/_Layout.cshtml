@@ -26,7 +26,9 @@
                     <ul class="navbar-nav">
                         
                         <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Products" asp-action="List">
+                            @* <a class="nav-link" asp-area="" asp-controller="Products" asp-action="List"> *@
+                                @*Laikina nuoroda i main ekrana*@
+                            <a class="nav-link" asp-controller="Home" asp-action="Index"> 
                                 <i class="bi bi-film"></i> Skelbimai
                             </a>
                         </li>
@@ -99,9 +101,55 @@
             </div>
         </nav>
 
+        @* <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container">
+                <!-- Kairysis meniu mygtukas, kuris išskleidžia dropdown -->
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#categoryDropdown"
+                        aria-controls="categoryDropdown" aria-expanded="false" aria-label="Toggle category dropdown">
+                    Kategorijos <i class="bi bi-chevron-down"></i>
+                </button>
+
+                <!-- Išskleidžiamas meniu su kategorijomis -->
+                <div class="collapse navbar-collapse" id="categoryDropdown">
+                    <ul class="navbar-nav mr-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Category" asp-action="SearchByCategory">
+                                <i class="bi bi-film"></i> Kategorijos
+                            </a>
+                        </li>
+                        <!-- Čia galite pridėti daugiau kategorijų nuorodų -->
+                    </ul>
+                </div>
+            </div>
+        </nav> *@
+
 
         
     </header>
+
+     @* <div class="container-fluid">
+        <!-- Pagrindinė dalis su turiniu -->
+        <main role="main" class="pb-3">
+            <!-- Viršutinė juosta su kategorijų sąrašu -->
+            <div class="row mb-3">
+                <div class="col">
+                    <h4>Pasirinkite kategoriją:</h4>
+                    <ul class="list-inline">
+                        @{
+                            var categories = ViewData["Categories"] as List<string>;
+                            @if (categories != null)
+                            {
+                            foreach (var category in categories)
+                            {
+                                        <li class="list-inline-item">
+                                            <a href="@Url.Action("SearchByCategory", "Category", new { category = category })">@category</a>
+                                        </li>
+                            }
+                            }
+                        }
+                    </ul>
+                </div>
+            </div> *@
 
     <div class="container-fluid">
         <main role="main" class="pb-3">

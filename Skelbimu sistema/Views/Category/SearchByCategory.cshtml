@@ -1,0 +1,34 @@
+﻿@model List<Skelbimu_sistema.Models.Product>
+
+<div class="text-center">
+    <h1 class="display-4" style="font-size: 2rem;">Rezultatai pagal kategorijas</h1>
+</div>
+
+ <div class="container">
+    @if (Model.Any())
+    {
+        <div class="row">
+            @foreach (var product in Model)
+            {
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100">
+                        <img class="card-img-top" src="@product.ImageUrl" alt="@product.Name">
+                        <div class="card-body">
+                            <h4 class="card-title">@product.Name</h4>
+                            <p class="card-text">@product.Description</p>
+                            <p class="card-text">Kaina: $@product.Price</p>
+                        </div>
+                        <div class="card-footer">
+                            <a href="@Url.Action("Details", "Product", new { id = product.Id })" class="btn btn-primary">Peržiūrėti.</a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <p>Jūsų paiešką atitinkančių skelbimų nerasta.</p>
+    }
+</div> 
+
