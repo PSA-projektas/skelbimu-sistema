@@ -3,28 +3,92 @@
 <div class="container">
     <h1 class="display-4">Paieškos rezultatai</h1>
     <div class="row">
-        @if (Model.Any())
-        {
-            @foreach (var product in Model)
-            {
-                <div class="col-lg-4 col-md-6 mb-4">
-                    <div class="card h-100">
-                        <img class="card-img-top" src="@product.ImageUrl" alt="@product.Name">
-                        <div class="card-body">
-                            <h4 class="card-title">@product.Name</h4>
-                            <p class="card-text">@product.Description</p>
-                            <p class="card-text">Price: $@product.Price</p>
+        <div class="col-lg-9">
+            <div class="row">
+                @if (Model.Any())
+                {
+                    @foreach (var product in Model)
+                    {
+                        <div class="col-lg-4 col-md-6 mb-4">
+                            <div class="card h-100">
+                                <img class="card-img-top" src="@product.ImageUrl" alt="@product.Name">
+                                <div class="card-body">
+                                    <h4 class="card-title">@product.Name</h4>
+                                    <p class="card-text">@product.Description</p>
+                                    <p class="card-text">Price: $@product.Price</p>
+                                </div>
+                                <div class="card-footer">
+                                    <a href="@Url.Action("Details", "Product", new { id = product.Id })" class="btn btn-primary">View Details</a>
+                                </div>
+                            </div>
                         </div>
-                        <div class="card-footer">
-                            <a href="@Url.Action("Details", "Product", new { id = product.Id })" class="btn btn-primary">View Details</a>
+                    }
+                }
+                else
+                {
+                    <p>No products found matching your search.</p>
+                }
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Filtrai</h5>
+                    <form id="filterForm">
+                        <div class="form-group">
+                            <label for="priceInput">Kaina</label>
+                            <input type="text" class="form-control" id="priceInput" placeholder="Įveskite kainą">
                         </div>
-                    </div>
+                        <input type="range" class="form-control-range mb-3" id="priceRange" min="0" max="1000" value="0" step="10">
+                        <div class="form-group">
+                            <label for="sortDropdown">Rūšiavimas</label>
+                            <select class="form-control" id="sortDropdown">
+                                <option value="alphabetical">Pagal abėcėlę</option>
+                                <option value="priceAscending">Pagal kainą (nuo mažiausios)</option>
+                                <option value="priceDescending">Pagal kainą (nuo didžiausios)</option>
+                            </select>
+                        </div>
+                        <button type="button" id="applyFilter" class="btn btn-primary btn-block">Taikyti filtrą</button>
+                    </form>
                 </div>
-            }
-        }
-        else
-        {
-            <p>No products found matching your search.</p>
-        }
+            </div>
+        </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        const priceInput = document.getElementById('priceInput');
+        const priceRange = document.getElementById('priceRange');
+        const applyFilterButton = document.getElementById('applyFilter');
+
+        // Add event listener to the slider
+        priceRange.addEventListener('input', function () {
+            // Update the value of the text input field with the current value of the slider
+            priceInput.value = this.value;
+        });
+
+        // Add event listener to the "Apply Filter" button
+        applyFilterButton.addEventListener('click', function () {
+            // Get the selected sort option
+            const sortDropdown = document.getElementById('sortDropdown');
+            const selectedSort = sortDropdown.options[sortDropdown.selectedIndex].value;
+
+            // Get the filter values
+            const minPrice = document.getElementById('priceInput').value;
+            const maxPrice = document.getElementById('priceRange').value;
+
+            // Send AJAX request to Filter/Index with filter parameters
+            $.ajax({
+                url: '@Url.Action("Index", "Filter")',
+                type: 'GET',
+                data: { minPrice: minPrice, maxPrice: maxPrice, selectedSort: selectedSort },
+                success: function (result) {
+                    // Replace the search results with the filtered results
+                    $('.search-results').html(result);
+                }
+            });
+        });
+    </script>
+}
+
