@@ -33,7 +33,18 @@
                             </a>
                         </li>
 
-                        <form id="searchForm" class="form-inline my-2 my-lg-0" asp-controller="Product" asp-action="Filter" method="get">
+                        @* <form id="searchForm" class="form-inline my-2 my-lg-0" asp-controller="Product" asp-action="Filter" method="get">
+                            <div class="input-group">
+                                <input id="searchInput" name="searchString" type="text" class="form-control" placeholder="Ieškoti prekės..."
+                                       aria-label="Search" aria-describedby="searchButton">
+                                <div class="input-group-append">
+                                    <button id="submitSearch" class="btn btn-outline-success" type="submit">
+                                        <i class="bi bi-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </form> *@
+                        <form id="searchForm" class="form-inline my-2 my-lg-0" asp-controller="Search" asp-action="Index" method="get">
                             <div class="input-group">
                                 <input id="searchInput" name="searchString" type="text" class="form-control" placeholder="Ieškoti prekės..."
                                        aria-label="Search" aria-describedby="searchButton">
@@ -101,55 +112,23 @@
             </div>
         </nav>
 
-        @* <nav class="navbar navbar-expand-lg navbar-light bg-light">
-            <div class="container">
-                <!-- Kairysis meniu mygtukas, kuris išskleidžia dropdown -->
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#categoryDropdown"
-                        aria-controls="categoryDropdown" aria-expanded="false" aria-label="Toggle category dropdown">
-                    Kategorijos <i class="bi bi-chevron-down"></i>
-                </button>
-
-                <!-- Išskleidžiamas meniu su kategorijomis -->
-                <div class="collapse navbar-collapse" id="categoryDropdown">
-                    <ul class="navbar-nav mr-auto">
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Category" asp-action="SearchByCategory">
-                                <i class="bi bi-film"></i> Kategorijos
-                            </a>
-                        </li>
-                        <!-- Čia galite pridėti daugiau kategorijų nuorodų -->
-                    </ul>
-                </div>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="form-group">
+                <select name="category" class="form-control" style="width: 300px;" asp-items="ViewBag.Categories">
+                    <option value="">Pasirinkite kategoriją</option>
+                    @foreach (var category in Enum.GetValues(typeof(Category)))
+                    {
+                        <option value="@category">@category</option>
+                    }
+                </select>
+                <input type="hidden" name="selectedCategory" id="selectedCategory" />
             </div>
-        </nav> *@
-
-
+            <a class="nav-link" asp-controller="Category" asp-action="SearchByCategory">
+                <button type="submit" class="btn btn-primary">Rodyti skelbimus</button>
+            </a>
+        </nav>      
         
     </header>
-
-     @* <div class="container-fluid">
-        <!-- Pagrindinė dalis su turiniu -->
-        <main role="main" class="pb-3">
-            <!-- Viršutinė juosta su kategorijų sąrašu -->
-            <div class="row mb-3">
-                <div class="col">
-                    <h4>Pasirinkite kategoriją:</h4>
-                    <ul class="list-inline">
-                        @{
-                            var categories = ViewData["Categories"] as List<string>;
-                            @if (categories != null)
-                            {
-                            foreach (var category in categories)
-                            {
-                                        <li class="list-inline-item">
-                                            <a href="@Url.Action("SearchByCategory", "Category", new { category = category })">@category</a>
-                                        </li>
-                            }
-                            }
-                        }
-                    </ul>
-                </div>
-            </div> *@
 
     <div class="container-fluid">
         <main role="main" class="pb-3">

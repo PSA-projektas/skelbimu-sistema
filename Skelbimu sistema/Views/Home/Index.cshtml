@@ -4,7 +4,7 @@
     ViewData["Title"] = "Skelbimų puslapis";
 }
 
-<form asp-controller="Category" asp-action="SearchByCategory" method="get">
+@* <form asp-controller="Category" asp-action="SearchByCategory" method="get">
     <div class="form-group">
         <select name="category" class="form-control" style="width: 300px;" asp-items="ViewBag.Categories">
             <option value="">Pasirinkite kategoriją</option>
@@ -16,7 +16,16 @@
         <input type="hidden" name="selectedCategory" id="selectedCategory" />
     </div>
     <button type="submit" class="btn btn-primary">Rodyti skelbimus</button>
-</form>
+</form> *@
+@* <form asp-controller="Category" asp-action="SearchByCategory" method="get">
+    <div class="form-group">
+        <select name="selectedCategory" class="form-control" style="width: 300px;" asp-items="ViewBag.Categories">
+            <option value="">Pasirinkite kategoriją</option>
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Rodyti skelbimus</button>
+</form> *@
+
 
 
 
