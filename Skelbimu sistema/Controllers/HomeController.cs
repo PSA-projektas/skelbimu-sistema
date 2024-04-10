@@ -25,6 +25,7 @@ namespace Skelbimu_sistema.Controllers
         public async Task<IActionResult> Index()
         {
             List<Product> products = await _dbContext.Products.ToListAsync();
+            
             return View(products);
         }
 
