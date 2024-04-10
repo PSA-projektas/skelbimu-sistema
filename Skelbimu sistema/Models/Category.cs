@@ -17,7 +17,7 @@ namespace Skelbimu_sistema.Models
         Other // Nezinau ar kita elektronika rasyt bet jei ka dadesim
     }
 
-    //public class  Category
+    //public class Category
     //{
     //    [Key]
     //    public int Id { get; set; }

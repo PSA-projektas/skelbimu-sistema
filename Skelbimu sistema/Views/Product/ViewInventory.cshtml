@@ -1,0 +1,56 @@
+﻿@model List<Product> // Update model to receive product list and userId
+
+@{
+    ViewData["Title"] = "Inventory";
+    int currentUserId = (int)ViewData["UserId"];
+}
+
+<div class="text-center">
+    <h1 class="display-4">Your Inventory</h1>
+</div>
+
+<div class="container">
+    <div class="row">
+        @foreach (var product in Model)
+        {
+            // Check if the product was uploaded by the current user
+            if (product.UserId == currentUserId)
+            {
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100">
+                        <img class="card-img-top" src="@product.ImageUrl" alt="@product.Name">
+                        <div class="card-body">
+                            <h4 class="card-title">@product.Name</h4>
+                            <p class="card-text">@product.Description</p>
+                            <p class="card-text">Price: $@product.Price</p>
+                        </div>
+                        <div class="card-footer">
+                            <button class="btn btn-danger" onclick="deleteProduct('@product.Id')">Naikinti</button>
+                            <button class="btn btn-primary" onclick="editProduct('@product.Id')">Redaguoti</button>
+                            <button class="btn btn-success" onclick="changeProductState('@product.Id')">Keisti būseną</button>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function deleteProduct(productId) {
+            //naikinimo spageciai
+            alert("Naikinti produkta su ID: " + productId);
+        }
+
+        function editProduct(productId) {
+            //editinimo spageciai
+            alert("Redaguoti produkta su ID: " + productId);
+        }
+
+        function changeProductState(productId) {
+            //busenos keitimo spageciai
+            alert("Keisti produkto būseną, ID: " + productId);
+        }
+    </script>
+}

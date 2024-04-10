@@ -1,4 +1,5 @@
 ﻿using Azure.Core;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
@@ -16,6 +17,7 @@ namespace Skelbimu_sistema.Controllers
         private readonly DataContext _dataContext;
         private readonly int cookieExpirationTime = 7; // Days
         private readonly int userSearchHistorySize = 256;
+
 
         public ProductController(DataContext dataContext)
         {
@@ -43,25 +45,26 @@ namespace Skelbimu_sistema.Controllers
             {
                 return View("Create", request); // Return to the registration view with errors
             }
-                // Create a new Product object
-                Product product = new Product();
+            int userId = GetCurrentUserId();
+            // Create a new Product object
+            Product product = new Product();
 
-                // Map properties from the ViewModel to the Model
-                product.Name = request.Name;
-                product.Description = request.Description;
-                product.Price = request.Price;
-                product.ImageUrl = request.ImageUrl;
-                product.StartDate = request.StartDate.ToString("yyyy-MM-dd"); // Format date
-                product.EndDate = request.EndDate.ToString("yyyy-MM-dd");  // Format date
-                product.Category = request.Category;
+            // Map properties from the ViewModel to the Model
+            product.Name = request.Name;
+            product.Description = request.Description;
+            product.Price = request.Price;
+            product.ImageUrl = request.ImageUrl;
+            product.StartDate = request.StartDate.ToString("yyyy-MM-dd"); // Format date
+            product.EndDate = request.EndDate.ToString("yyyy-MM-dd");  // Format date
+            product.Category = request.Category;
+            product.UserId = userId;
 
-                _dataContext.Products.Add(product);
-                await _dataContext.SaveChangesAsync();
+            _dataContext.Products.Add(product);
+            await _dataContext.SaveChangesAsync();
 
-                return RedirectToAction("Index", "Home");
+            return RedirectToAction("Index", "Home");
         }
 
-        //write me a method that will return one product by id
         [Route("product/details")]
         public IActionResult Details(int id)
         {
@@ -75,6 +78,24 @@ namespace Skelbimu_sistema.Controllers
 
             return View(product); // Return the product details view
         }
+
+        [Route("Product/ViewInventory")]
+        public async Task<IActionResult> ViewInventory()
+        {
+            int userId = GetCurrentUserId();
+            if (userId == null)
+            {
+                return NotFound();
+            }
+
+            var userInventory = await _dataContext.Products
+                                .Where(p => p.UserId == userId)
+                                .ToListAsync();
+            ViewData["UserId"] = userId;
+
+            return View(userInventory);
+        }
+
 
         /// <summary>
         /// Returns logged in user's id
@@ -121,7 +142,7 @@ namespace Skelbimu_sistema.Controllers
                 return RedirectToAction("Index", "Home");
             }
             else // Redirect to login page
-            {               
+            {
                 return RedirectToAction("Login", "User");
             }
         }
