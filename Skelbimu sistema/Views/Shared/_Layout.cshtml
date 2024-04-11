@@ -119,7 +119,7 @@
             </div>
         </nav>
 
-        @* <nav class="navbar navbar-expand-lg navbar-light bg-light">
+       @*  <nav class="navbar navbar-expand-lg navbar-light bg-light">
             <div class="form-group">
                 <select name="category" class="form-control" style="width: 300px;" asp-items="ViewBag.Categories">
                     <option value="">Pasirinkite kategoriją</option>
@@ -133,7 +133,55 @@
             <a class="nav-link" asp-controller="Category" asp-action="SearchByCategory">
                 <button type="submit" class="btn btn-primary">Rodyti skelbimus</button>
             </a>
-        </nav>    *@   
+        </nav>       *@
+
+        @{
+            Dictionary<Category, string> categoryTranslations = new Dictionary<Category, string>
+        {
+        { Category.Motherboard, "Pagrindinė plokštė" },
+        { Category.CPU, "Procesorius" },
+        { Category.GPU, "Vaizdo plokštė" },
+        { Category.RAM, "Darbinė atmintis" },
+        { Category.Storage, "Kietieji diskai" },
+        { Category.PSU, "Maitinimo blokas" },
+        { Category.Case, "Korpusas" },
+        { Category.Cooling, "Vėsinimas" },
+        { Category.Peripherals, "Išoriniai įrenginiai" },
+        { Category.Other, "Kiti" }
+        };
+        }
+
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="form-inline">
+                <div class="btn-group mr-2" role="group" aria-label="Kategorijos">
+                    @foreach (var category in Enum.GetValues(typeof(Category)))
+                    {
+                        <form asp-controller="Category" asp-action="Index" method="get" class="mr-2">
+                            <input type="hidden" name="selectedCategory" value="@category" />
+                            <button type="submit" class="btn btn-primary btn-lg">@categoryTranslations[(Category)category]</button>
+                        </form>
+                    }
+                </div>
+            </div>
+        </nav>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
         
