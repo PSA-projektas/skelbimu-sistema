@@ -22,11 +22,9 @@ namespace Skelbimu_sistema.Models
 
         public Category Category { get; set; }
 
-        // foreign key to User
         [ForeignKey("User")]
         public int UserId { get; set; }
-        // Navigation property to access the related User entity (the seller)
-        //[ForeignKey("User")]
+
         public virtual User Creator { get; set; }
     }
 
