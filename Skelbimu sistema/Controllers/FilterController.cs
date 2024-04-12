@@ -1,29 +1,22 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Skelbimu_sistema.Data;
-using Skelbimu_sistema.Models;
-using System.Collections.Generic;
 using System.Linq;
+using Skelbimu_sistema.Models;
 
 namespace Skelbimu_sistema.Controllers
 {
     public class FilterController : Controller
     {
-        private readonly DataContext _dataContext;
+        private readonly DataContext _context;
 
-        public FilterController(DataContext dataContext)
+        public FilterController(DataContext context)
         {
-            _dataContext = dataContext;
+            _context = context;
         }
 
-        public IActionResult Index(double minPrice = 0, double maxPrice = double.MaxValue)
+        public IActionResult FilterByPrice(double minPrice, double maxPrice)
         {
-            // Get products within the specified price range
-            var filteredProducts = _dataContext.Products
-                .Where(p => p.Price >= minPrice && p.Price <= maxPrice)
-                .OrderBy(p => p.Name)
-                .ToList();
-
-            return View("FilteredResults", filteredProducts);
+            var filteredProducts = _context.Products.Where(p => p.Price >= minPrice && p.Price <= maxPrice).ToList();
+            return PartialView("_FilteredResults", filteredProducts);
         }
     }
 }
