@@ -46,10 +46,9 @@ namespace Skelbimu_sistema.Controllers
                 return View("Create", request); // Return to the registration view with errors
             }
             int userId = GetCurrentUserId();
-            // Create a new Product object
             Product product = new Product();
 
-            // Map properties from the ViewModel to the Model
+           
             product.Name = request.Name;
             product.Description = request.Description;
             product.Price = request.Price;
@@ -73,10 +72,10 @@ namespace Skelbimu_sistema.Controllers
 
             if (product == null)
             {
-                return NotFound(); // Return a 404 Not Found if the product is not found
+                return NotFound();
             }
 
-            return View(product); // Return the product details view
+            return View(product); 
         }
 
         [Route("Product/ViewInventory")]
