@@ -1,0 +1,86 @@
+﻿@model List<Skelbimu_sistema.Models.Product>
+
+@{
+    Dictionary<Category, string> categoryTranslations = new Dictionary<Category, string>
+    {
+        { Category.Motherboard, "Pagrindinė plokštė" },
+        { Category.CPU, "Procesorius" },
+        { Category.GPU, "Vaizdo plokštė" },
+        { Category.RAM, "Darbinė atmintis" },
+        { Category.Storage, "Kietieji diskai" },
+        { Category.PSU, "Maitinimo blokas" },
+        { Category.Case, "Korpusas" },
+        { Category.Cooling, "Vėsinimas" },
+        { Category.Peripherals, "Išoriniai įrenginiai" },
+        { Category.Other, "Kiti" }
+    };
+
+    string categoryHeader = "Visos kategorijos"; // Numatytasis antraštės tekstas
+    if (ViewBag.SelectedCategory != null)
+    {
+        // Jei yra pasirinkta kategorija, nustatome antraštės tekstą pagal pasirinktą kategoriją
+        categoryHeader = categoryTranslations[(Category)ViewBag.SelectedCategory];
+    }
+}
+
+<div class="container">
+    <h1 class="display-4">Paieškos rezultatai (@categoryHeader)  </h1>
+    <div class="row">
+        <div class="col-lg-9">
+            <div class="row">
+                @if (Model.Any())
+                {
+                    @foreach (var product in Model)
+                    {
+                        <div class="col-lg-4 col-md-6 mb-4">
+                            <div class="card h-100">
+                                <img class="card-img-top" src="@product.ImageUrl" alt="@product.Name">
+                                <div class="card-body">
+                                    <h4 class="card-title">@product.Name</h4>
+                                    <p class="card-text">@product.Description</p>
+                                    <p class="card-text">Price: $@product.Price</p>
+                                </div>
+                                <div class="card-footer">
+                                    <a href="@Url.Action("Details", "Product", new { id = product.Id })" class="btn btn-primary">Peržiūrėti detaliau</a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p>Nerasta skelbimų pagal jūsų norimą kategorijos paiešką.</p>
+                }
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <h4>Filtruoti pagal kainą:</h4>
+            <input type="range" id="minPrice" name="minPrice" min="0" max="1000" value="0" step="10" oninput="updateSliderValue('min')">
+            <span id="minPriceValue">$0</span>
+            <br>
+            <input type="range" id="maxPrice" name="maxPrice" min="0" max="1000" value="1000" step="10" oninput="updateSliderValue('max')">
+            <span id="maxPriceValue">$1000</span>
+            <br>
+            <button onclick="filterResults()">Filtruoti</button>
+            <div id="priceRangeValues"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function updateSliderValue(type) {
+        var slider = type === 'min' ? document.getElementById("minPrice") : document.getElementById("maxPrice");
+        var valueSpan = type === 'min' ? document.getElementById("minPriceValue") : document.getElementById("maxPriceValue");
+        valueSpan.innerHTML = "$" + slider.value;
+    }
+    function filterResults() {
+        var minPrice = document.getElementById("minPrice").value;
+        var maxPrice = document.getElementById("maxPrice").value;
+
+        // Atnaujinti rodyklę su pasirinktais kainų intervalais
+        document.getElementById("priceRangeValues").innerHTML = "Pasirinkti intervalai: $" + minPrice + " - $" + maxPrice;
+
+        // Redirect or send AJAX request to FilterController with minPrice and maxPrice values
+    }
+</script>
+
