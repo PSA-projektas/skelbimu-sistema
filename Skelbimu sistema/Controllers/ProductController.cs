@@ -1,4 +1,5 @@
 ﻿using Azure.Core;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +11,6 @@ using System.Security.Cryptography;
 
 namespace Skelbimu_sistema.Controllers
 {
-    //[Authorize] // Users must be logged in to access ad actions
     [Route("skelbimas")]
     public class ProductController : Controller
     {
@@ -24,6 +24,7 @@ namespace Skelbimu_sistema.Controllers
             _dataContext = dataContext;
         }
 
+        [Authorize]
         [HttpGet("kurimas")]
         public IActionResult Create()
         {
@@ -32,6 +33,7 @@ namespace Skelbimu_sistema.Controllers
             return View(request);
         }
 
+        [Authorize]
         [HttpPost("kurti")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SubmitCreate(ProductCreationRequest request)
@@ -45,7 +47,7 @@ namespace Skelbimu_sistema.Controllers
             {
                 return View("Create", request); // Return to the registration view with errors
             }
-            int userId = GetCurrentUserId();
+            int userId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == "Id")!.Value);
             Product product = new Product();
 
            
@@ -78,14 +80,11 @@ namespace Skelbimu_sistema.Controllers
             return View(product); 
         }
 
+        [Authorize]
         [Route("Product/ViewInventory")]
         public async Task<IActionResult> ViewInventory()
         {
-            int userId = GetCurrentUserId();
-            if (userId == null)
-            {
-                return NotFound();
-            }
+            int userId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == "Id")!.Value);
 
             var userInventory = await _dataContext.Products
                                 .Where(p => p.UserId == userId)
@@ -97,31 +96,6 @@ namespace Skelbimu_sistema.Controllers
 
 
         /// <summary>
-        /// Returns logged in user's id
-        /// </summary>
-        /// <returns>Id</returns>
-        public int GetCurrentUserId()
-        {
-            // Retrieve user cookie
-            var userCookie = HttpContext.Request.Cookies["User"];
-
-            if (!string.IsNullOrEmpty(userCookie))
-            {
-                // Parse user ID from cookie
-                var userInfo = JsonConvert.DeserializeObject<dynamic>(userCookie);
-                int userId = userInfo.Id;
-
-                return userId;
-            }
-            else
-            {
-                // User is not authenticated or user cookie is not found, return -1
-                return -1;
-            }
-        }
-
-
-        /// <summary>
         /// Filter action when search button is pressed
         /// </summary>
         /// <param name="searchString">User search words</param>
@@ -129,8 +103,6 @@ namespace Skelbimu_sistema.Controllers
         [Route("product/filter")]
         public IActionResult Filter(string searchString)
         {
-            int userId = GetCurrentUserId();
-
             if (string.IsNullOrEmpty(searchString))
             {
                 return View("SearchResults", new List<Product>());
@@ -149,15 +121,17 @@ namespace Skelbimu_sistema.Controllers
                     Enum.GetName(typeof(Category), p.Category)?.ToLower() == searchLower)
                 .ToList();
 
+
             // Check if user is logged in
-            if (userId >= 0)
+            if (HttpContext.Request.Cookies.ContainsKey("AuthToken"))
             {
                 // Save search history
+                var userId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == "Id")!.Value);
                 SaveSearchHistory(searchString, userId);
 
                 return View("SearchResults", filteredProducts);
             }
-            else // Redirect to login page
+            else
             {
                 return View("SearchResults", filteredProducts);               
             }
@@ -167,6 +141,7 @@ namespace Skelbimu_sistema.Controllers
         /// Saves user search to cookie and database
         /// </summary>
         /// <param name="searchString">User search words</param>
+        [Authorize]
         private void SaveSearchHistory(string searchString, int userId)
         {
             // Retrieve the search history cookie for the current user
@@ -194,6 +169,7 @@ namespace Skelbimu_sistema.Controllers
             // Save the search history to the database for the current user
             SaveSearchToDatabase(searchString, userId);
         }
+
         [Route("Product/SearchByCategory")]
         public IActionResult CategorySearch(Category? selectedCategory)
         {
@@ -214,6 +190,7 @@ namespace Skelbimu_sistema.Controllers
         /// </summary>
         /// <param name="searchString">User search words</param>
         /// <param name="userId">User id</param>
+        [Authorize]
         private void SaveSearchToDatabase(string searchString, int userId)
         {
             var currentUser = _dataContext.Users.FirstOrDefault(p => p.Id == userId);

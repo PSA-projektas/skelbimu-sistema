@@ -1,6 +1,10 @@
 global using Microsoft.EntityFrameworkCore;
 global using Skelbimu_sistema.Models;
 global using Skelbimu_sistema.Data;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,8 +15,42 @@ builder.Services.AddDbContext<DataContext>(options =>
 	// The connection string is retrieved from the appsettings.json
 	options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
-builder.Services.AddAuthentication();
-builder.Services.AddAuthorization();
+
+builder.Services.AddAuthentication(x =>
+{
+	x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+	x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+	x.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(x =>
+{
+	x.TokenValidationParameters = new TokenValidationParameters
+	{
+		ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
+		ValidAudience = builder.Configuration["JwtSettings:Issuer"],
+		IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Key"]!)),
+		ValidateIssuer = true,
+		ValidateAudience = true,
+		ValidateLifetime = true,
+		ValidateIssuerSigningKey = true
+    };
+
+    x.Events = new JwtBearerEvents
+    {
+		OnMessageReceived = context =>
+		{
+			if (context.Request.Cookies.ContainsKey("AuthToken"))
+			{
+				context.Token = context.Request.Cookies["AuthToken"];
+			}
+			return Task.CompletedTask;
+		}
+    };
+});
+builder.Services.AddAuthorization(options =>
+{
+	options.AddPolicy("IsAdmin", p =>
+		p.RequireClaim("Role", "2"));
+});
 
 var app = builder.Build();
 
@@ -25,6 +63,10 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
+
+app.UseAuthorization();
 
 app.UseStaticFiles();
 

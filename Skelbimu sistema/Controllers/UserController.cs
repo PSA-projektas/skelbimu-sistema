@@ -1,19 +1,27 @@
 ﻿using Azure.Core;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using Skelbimu_sistema.Models;
 using Skelbimu_sistema.ViewModels;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Security.Cryptography;
+using System.Text;
 
 namespace Skelbimu_sistema.Controllers
 {
-	// TODO: rewrite to use authentication and signinmanager with usermanager
-	[Route("naudotojas")]
+    // TODO: rewrite to use authentication and signinmanager with usermanager
+    [Route("naudotojai")]
 	public class UserController : Controller
 	{
 		private readonly DataContext _dataContext;
+        private const string TokenSecretKey = "SKELBIMUSISTEMASECRETTOKENKEY12345";
+		private static readonly TimeSpan TokenLifetime = TimeSpan.FromHours(1);
 
-		public UserController(DataContext dataContext)
+        public UserController(DataContext dataContext)
 		{
 			_dataContext = dataContext;
 		}
@@ -98,33 +106,40 @@ namespace Skelbimu_sistema.Controllers
 				return View("Login", request);
 			}
 
-			// Create a cookie with user's information
-			var userInfo = new { Id = user.Id, Email = user.Email, FirstName = user.FirstName, LastName = user.LastName, PhoneNumber = user.PhoneNumber };
-			var userCookieValue = JsonConvert.SerializeObject(userInfo);
-			var cookieOptions = new CookieOptions
-			{
-				Expires = DateTime.UtcNow.AddHours(2), // Set cookie expiration date
-				HttpOnly = true // Ensure the cookie is only accessible via HTTP(S)
-			};
+			// If login is valid create a JWT token
+			var jwt = GenerateToken(user);
 
-			// Add it to storage
-			HttpContext.Response.Cookies.Append("User", userCookieValue, cookieOptions);
+            // Set the JWT in a secure HttpOnly cookie
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true
+            };
+            Response.Cookies.Append("AuthToken", jwt, cookieOptions);
 
-			return RedirectToAction("Index", "Home"); // TODO: pass a success message
+            // Create a cookie with user's information
+            //var userInfo = new { Id = user.Id, Email = user.Email, FirstName = user.FirstName, LastName = user.LastName, PhoneNumber = user.PhoneNumber };
+            //var userCookieValue = JsonConvert.SerializeObject(userInfo);
+            //var cookieOptions = new CookieOptions
+            //{
+            //	Expires = DateTime.UtcNow.AddHours(2), // Set cookie expiration date
+            //	HttpOnly = true // Ensure the cookie is only accessible via HTTP(S)
+            //};
+
+            //// Add it to storage
+            //HttpContext.Response.Cookies.Append("User", userCookieValue, cookieOptions);
+
+            return RedirectToAction("Index", "Home"); // TODO: pass a success message
 		}
 
+		[Authorize]
 		[HttpPost("atsijungti")]
 		public IActionResult SubmitLogout()
 		{
-			var userCookie = HttpContext.Request.Cookies["User"];
+            // Remove the user auth token cookie
+            HttpContext.Response.Cookies.Delete("AuthToken");
 
-			if (!string.IsNullOrEmpty(userCookie))
-			{
-				// Remove the user cookie
-				HttpContext.Response.Cookies.Delete("User");
-			}
-
-			return RedirectToAction("Index", "Home"); // TODO: pass a success message
+            return RedirectToAction("Index", "Home"); // TODO: pass a success message
 		}
 
 		public IActionResult Index()
@@ -168,6 +183,46 @@ namespace Skelbimu_sistema.Controllers
 			return Convert.ToHexString(RandomNumberGenerator.GetBytes(64));
 		}
 
+		private string GenerateToken(User user)
+		{
+			var tokenHandler = new JwtSecurityTokenHandler();
+			var key = Encoding.UTF8.GetBytes(TokenSecretKey);
 
-	}
+			var claims = new List<Claim>
+			{
+				new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+				new(JwtRegisteredClaimNames.Sub, user.Email),
+				new(JwtRegisteredClaimNames.Email, user.Email),
+				new("Id", user.Id.ToString(), ClaimValueTypes.Integer),
+				new("Role", user.Role.ToString(), ClaimValueTypes.Integer)
+			};
+
+			var tokenDescriptor = new SecurityTokenDescriptor
+			{
+				Subject = new ClaimsIdentity(claims),
+				Expires = DateTime.UtcNow.Add(TokenLifetime),
+				Issuer = "https://skelbimusistema.lt",
+				Audience = "https://skelbimusistema.lt",
+				SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256),
+            };
+			//"Issuer": "https://skelbimusistema.lt",
+			//"Audience": "https://skelbimusistema.lt"
+
+			var token = tokenHandler.CreateToken(tokenDescriptor);
+
+			var jwt = tokenHandler.WriteToken(token);
+
+			return jwt;
+        }
+
+		/// <summary>
+		/// Returns logged in user's id
+		/// </summary>
+		/// <returns>Id</returns>
+		[Authorize]
+        public int GetCurrentUserId()
+        {
+            return int.Parse(User.Claims.FirstOrDefault(c => c.Type == "Id")!.Value);
+        }
+    }
 }
