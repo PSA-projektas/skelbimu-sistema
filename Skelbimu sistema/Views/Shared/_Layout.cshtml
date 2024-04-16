@@ -33,7 +33,8 @@
                             </a>
                         </li>
 
-                        <form id="searchForm" class="form-inline my-2 my-lg-0" asp-controller="Search" asp-action="Index" method="get">
+                        @* <form id="searchForm" class="form-inline my-2 my-lg-0" asp-controller="Search" asp-action="Index" method="get"> *@
+                        <form id="searchForm" class="form-inline my-2 my-lg-0" asp-controller="Product" asp-action="Filter" method="get">
                             <div class="input-group">
                                 <input id="searchInput" name="searchString" type="text" class="form-control" placeholder="Ieškoti prekės..."
                                        aria-label="Search" aria-describedby="searchButton">
@@ -126,7 +127,7 @@
                 <div class="btn-group mr-2" role="group" aria-label="Kategorijos">
                     @foreach (var category in Enum.GetValues(typeof(Category)))
                     {
-                        <form asp-controller="Category" asp-action="Index" method="get" class="mr-2">
+                        <form asp-controller="Product" asp-action="CategorySearch" method="get" class="mr-2">
                             <input type="hidden" name="selectedCategory" value="@category" />
                             <button type="submit" class="btn btn-primary btn-lg">@categoryTranslations[(Category)category]</button>
                         </form>

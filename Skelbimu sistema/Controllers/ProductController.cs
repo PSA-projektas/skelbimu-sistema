@@ -132,18 +132,35 @@ namespace Skelbimu_sistema.Controllers
         {
             int userId = GetCurrentUserId();
 
+            if (string.IsNullOrEmpty(searchString))
+            {
+                return View("SearchResults", new List<Product>());
+            }
+            // Convert the search string to lowercase for case-insensitive comparison
+            var searchLower = searchString.ToLower();
+
+            // Get all products from the database
+            var allProducts = _dataContext.Products.ToList();
+
+            // Filter products in memory
+            var filteredProducts = allProducts
+                .Where(p =>
+                    p.Name.ToLower().Contains(searchLower) ||
+                    p.Description.ToLower().Contains(searchLower) ||
+                    Enum.GetName(typeof(Category), p.Category)?.ToLower() == searchLower)
+                .ToList();
+
             // Check if user is logged in
             if (userId >= 0)
             {
                 // Save search history
                 SaveSearchHistory(searchString, userId);
 
-                // TO DO: Need to implement new view to show filterred list
-                return RedirectToAction("Index", "Home");
+                return View("SearchResults", filteredProducts);
             }
             else // Redirect to login page
             {
-                return RedirectToAction("Login", "User");
+                return View("SearchResults", filteredProducts);               
             }
         }
 
@@ -178,7 +195,20 @@ namespace Skelbimu_sistema.Controllers
             // Save the search history to the database for the current user
             SaveSearchToDatabase(searchString, userId);
         }
+        [Route("Product/SearchByCategory")]
+        public IActionResult CategorySearch(Category? selectedCategory)
+        {
+            if (selectedCategory == null)
+            {
+                ViewBag.SelectedCategory = null;
+                return View("SearchByCategory", new List<Product>());
+            }
 
+            ViewBag.SelectedCategory = selectedCategory;
+            List<Product> products = _dataContext.Products.Where(p => p.Category == selectedCategory).ToList();
+
+            return View("SearchByCategory", products);
+        }
 
         /// <summary>
         /// Saves user search phrase into database

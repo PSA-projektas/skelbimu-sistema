@@ -1,7 +1,30 @@
 ﻿@model List<Skelbimu_sistema.Models.Product>
 
+@{
+    Dictionary<Category, string> categoryTranslations = new Dictionary<Category, string>
+    {
+        { Category.Motherboard, "Pagrindinė plokštė" },
+        { Category.CPU, "Procesorius" },
+        { Category.GPU, "Vaizdo plokštė" },
+        { Category.RAM, "Darbinė atmintis" },
+        { Category.Storage, "Kietieji diskai" },
+        { Category.PSU, "Maitinimo blokas" },
+        { Category.Case, "Korpusas" },
+        { Category.Cooling, "Vėsinimas" },
+        { Category.Peripherals, "Išoriniai įrenginiai" },
+        { Category.Other, "Kiti" }
+    };
+
+    string categoryHeader = "Visos kategorijos"; // Numatytasis antraštės tekstas
+    if (ViewBag.SelectedCategory != null)
+    {
+        // Jei yra pasirinkta kategorija, nustatome antraštės tekstą pagal pasirinktą kategoriją
+        categoryHeader = categoryTranslations[(Category)ViewBag.SelectedCategory];
+    }
+}
+
 <div class="container">
-    <h1 class="display-4">Paieškos rezultatai</h1>
+    <h1 class="display-4">Paieškos rezultatai (@categoryHeader)  </h1>
     <div class="row">
         <div class="col-lg-9">
             <div class="row">
@@ -26,7 +49,7 @@
                 }
                 else
                 {
-                    <p>Nerasta skelbimų pagal jūsų paiešką.</p>
+                    <p>Nerasta skelbimų pagal jūsų norimą kategorijos paiešką.</p>
                 }
             </div>
         </div>
@@ -60,3 +83,4 @@
         // Redirect or send AJAX request to FilterController with minPrice and maxPrice values
     }
 </script>
+
