@@ -12,7 +12,7 @@
 
 <body>
     @{
-        var userCookie = Context.Request.Cookies["User"];
+        var authCookie = Context.Request.Cookies["AuthToken"];
     }
     <header>
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -52,7 +52,7 @@
                             </a>
                         </li>
 
-                        @if (string.IsNullOrEmpty(userCookie))
+                        @if (string.IsNullOrEmpty(authCookie))
                         {
                             <li class="nav-item">
                                 <a class="nav-link" asp-area="" asp-controller="User" asp-action="Login">

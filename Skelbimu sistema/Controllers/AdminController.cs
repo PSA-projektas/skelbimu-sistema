@@ -1,8 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Skelbimu_sistema.Models;
 
 namespace Skelbimu_sistema.Controllers
 {
+    [Authorize(Policy = "IsAdmin")]
+    [Route("administracija")]
     public class AdminController : Controller
     {
         private readonly DataContext _dataContext;

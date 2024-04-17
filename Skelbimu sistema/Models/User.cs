@@ -13,7 +13,7 @@ namespace Skelbimu_sistema.Models
         public byte[] PasswordHash { get; set; } = new byte[32];
 		public byte[] PasswordSalt { get; set; } = new byte[32];
 		public string? PhoneNumber { get; set; } = null;
-        public int Role {  get; set; } = 0;
+        public int Role { get; set; } = 0;
         public bool Blocked { get; set; } = false;
 		public string? VerificationToken { get; set; }
         public DateTime? VerificationDate { get; set; }
