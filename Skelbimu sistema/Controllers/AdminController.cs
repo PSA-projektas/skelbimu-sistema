@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Skelbimu_sistema.Models;
+using Skelbimu_sistema.ViewModels;
+using System.Linq;
 
 namespace Skelbimu_sistema.Controllers
 {
@@ -47,15 +50,49 @@ namespace Skelbimu_sistema.Controllers
         }
 
         [HttpGet("administracija/skelbimai")]
-        public IActionResult Products(string filter, int? sellerId)
+        public async Task<IActionResult> Products(string filter, int? sellerId)
         {
-            return View();
+            var productsWithAdminInfo = await _dataContext.Products
+                .Include(product => product.Seller)
+                .Select(product => new ProductWithAdminInfo
+                {
+                    Product = product,
+                    Reports = _dataContext.Reports
+                    .Where(r => r.Product.Id == product.Id)
+                    .Include(report => report.User)
+                    .ToList(),
+                    Suspension = _dataContext.Suspensions.FirstOrDefault(s => s.Product.Id == product.Id)
+                }).ToListAsync();
+
+            return View(productsWithAdminInfo);
         }
 
         [HttpGet("administracija/skelbimai/{productId}")]
-        public IActionResult ProductDetails(int productId)
+        public async Task<IActionResult> ProductDetails(int productId)
         {
-            return View();
+            var product = await _dataContext.Products
+                .Include(p => p.Seller)
+                .FirstOrDefaultAsync(p => p.Id == productId);
+
+            // Fetch reports related to this product
+            var reports = await _dataContext.Reports
+                .Where(r => r.Product.Id == productId)
+                .Include(r => r.User) // Assuming reports have a foreign key to User
+                .ToListAsync();
+
+            // Fetch the suspension related to this product
+            var suspension = await _dataContext.Suspensions
+                .FirstOrDefaultAsync(s => s.Product.Id == productId);
+
+            // Construct the ProductWithAdminInfo based on the fetched data
+            var productWithAdminInfo = new ProductWithAdminInfo
+            {
+                Product = product,
+                Reports = reports,
+                Suspension = suspension
+            };
+
+            return View(productWithAdminInfo);
         }
     }
 }

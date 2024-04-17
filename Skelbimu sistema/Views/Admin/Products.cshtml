@@ -2,6 +2,8 @@
     ViewData["Title"] = "Administracijos skelbimų sąrašas";
 }
 
+@model List<Skelbimu_sistema.ViewModels.ProductWithAdminInfo>
+
 <div class="card justify-content-center m-5 p-4">
     <h1 class="text-center">Skelbimai</h1>
     <p class="text-center">Sistemos skelbimų sąrašas.</p>
@@ -20,19 +22,19 @@
             </tr>
         </thead>
         <tbody>
-            @for(int i = 0; i < 5; i++)
+            @foreach (var info in Model)
             {
-                        <tr>
-                            <td>@i</td>
-                            <td>Skelbimo pavadinimas</td>
-                            <td><a href="/admin/adverts?sellerId=1">Pardavėjo vardas ir pavardė</a></td>
-                            <td>Ne</td>
-                            <td>@i</td>
-                            <td>
-                                <a href="/user/details/1" title="Peržiūrėti pardavėjo paskyrą"><i class="bi bi-file-person-fill"></i></a>
-                                <a asp-controller="Admin" asp-action="ProductDetails" asp-route-productId="@i" title="Peržiūrėti skelbimo administracinę informaciją"><i class="bi bi-file-richtext-fill"></i></a>
-                            </td>
-                        </tr>
+                <tr>
+                    <td>@info.Product.Id</td>
+                    <td>@info.Product.Name</td>
+                    <td>@info.Product.Seller.Email</td>
+                    <td>@(info.Product.State == ProductState.Suspended ? "Taip" : "Ne")</td>
+                    <td>@info.Reports.Count</td>
+                    <td>
+                        <a asp-controller="User" asp-action="Details" asp-route-id="@info.Product.Seller.Id" title="Peržiūrėti pardavėjo paskyrą"><i class="bi bi-file-person-fill"></i></a>
+                        <a asp-controller="Admin" asp-action="ProductDetails" asp-route-productId="@info.Product.Id" title="Peržiūrėti skelbimo administracinę informaciją"><i class="bi bi-file-richtext-fill"></i></a>
+                    </td>
+                </tr>
             }
         </tbody>
     </table>

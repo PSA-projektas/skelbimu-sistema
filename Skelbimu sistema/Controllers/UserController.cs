@@ -132,7 +132,6 @@ namespace Skelbimu_sistema.Controllers
             return RedirectToAction("Index", "Home"); // TODO: pass a success message
 		}
 
-		[Authorize]
 		[HttpPost("atsijungti")]
 		public IActionResult SubmitLogout()
 		{

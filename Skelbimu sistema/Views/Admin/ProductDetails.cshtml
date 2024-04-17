@@ -2,17 +2,19 @@
     ViewData["Title"] = "Skelbimo administracinė informacija";
 }
 
+@model Skelbimu_sistema.ViewModels.ProductWithAdminInfo
+
 <div class="container mt-5">
     <div class="row justify-content-center">
         <h1 class="mb-4 text-center">Skelbimo informacija</h1>
         <div class="col-lg-12 col-md-12 mb-4">
             <div class="card">
                 <div class="card-body">
-                    <h2 class="mb-2">Skelbimo pavadinimas</h2>
-                    <p class="mb-4">Kategorija > Kategorija > Kategorija</p>
+                    <h2 class="mb-2">@Model.Product.Name</h2>
+                    <p class="mb-4">Kategorija > Kategorija > @Model.Product.Category</p>
                     <div class="card">
                         <div class="card-body">
-                            <p class="card-text">Skelbimo aprašymas</p>
+                            <p class="card-text">@Model.Product.Description</p>
                         </div>
                     </div>
                 </div>
@@ -20,45 +22,44 @@
         </div>
     </div>
 
-    <div class="row justify-content-center">
-        <h1 class="mb-4 text-center">Skelbimo perspėjimai</h1>
-        <div class="col-lg-12 col-md-12 mb-4">
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h3 class="mb-2">perspėjantysis@mail.com</h3>
-                    <div class="card">
+    @if (Model.Reports != null && Model.Reports.Count > 0)
+    {
+        <div class="row justify-content-center">
+            <h1 class="mb-4 text-center">Skelbimo perspėjimai</h1>
+            <div class="col-lg-12 col-md-12 mb-4">
+                @foreach (var report in Model.Reports)
+                {
+                    <div class="card mb-4">
                         <div class="card-body">
-                            <p class="card-text">Perspėjimo aprašymas</p>
+                            <h3 class="mb-2">@report.User.Email</h3>
+                            <div class="card">
+                                <div class="card-body">
+                                    <p class="card-text">@report.Reason</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h3 class="mb-2">perspėjantysis@mail.com</h3>
-                    <div class="card">
-                        <div class="card-body">
-                            <p class="card-text">Perspėjimo aprašymas</p>
-                        </div>
-                    </div>
-                </div>
+                }
             </div>
         </div>
-    </div>
+    }
 
-    <div class="row justify-content-center">
-        <h1 class="mb-4 text-center">Suspendavimo informacija</h1>
-        <div class="col-lg-12 col-md-12 mb-4">
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h3 class="mb-2">2024-03-17</h3>
-                    <div class="card">
-                        <div class="card-body">
-                            <p class="card-text">Suspendavimo priežastis</p>
+    @if (Model.Suspension != null)
+    {
+        <div class="row justify-content-center">
+            <h1 class="mb-4 text-center">Suspendavimo informacija</h1>
+            <div class="col-lg-12 col-md-12 mb-4">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h3 class="mb-2">@Model.Suspension.Date</h3>
+                        <div class="card">
+                            <div class="card-body">
+                                <p class="card-text">@Model.Suspension.Reason</p>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    }    
 </div>

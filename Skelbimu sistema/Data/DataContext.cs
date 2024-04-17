@@ -14,6 +14,7 @@ namespace Skelbimu_sistema.Data
         public DbSet<Product> Products { get; set; }
         //public DbSet<Category> Categories { get; set; }
         public DbSet<Report> Reports { get; set; }
+        public DbSet<Suspension> Suspensions { get; set; }
     }
     
     
