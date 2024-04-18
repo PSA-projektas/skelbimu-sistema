@@ -1,0 +1,25 @@
+﻿@{
+    ViewData["Title"] = "Suspendavimo kūrimas";
+}
+
+@model Suspension
+
+<h2>Suspenduokite skelbimą</h2>
+
+<form asp-action="SubmitSuspension" method="post">
+    <input type="hidden" asp-for="ProductId" />
+
+    <div class="form-group">
+        <label asp-for="Date" class="control-label">Data</label>
+        <input asp-for="Date" class="form-control" type="date" disabled />
+        <span asp-validation-for="Date" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Reason" class="control-label">Priežąstis</label>
+        <textarea asp-for="Reason" class="form-control"></textarea>
+        <span asp-validation-for="Reason" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-2">Suspenduoti skelbimą</button>
+</form>

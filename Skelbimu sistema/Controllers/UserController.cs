@@ -146,17 +146,18 @@ namespace Skelbimu_sistema.Controllers
 			return View();
 		}
 
-		public IActionResult Details(int id)
+        [HttpGet("naudotojai/{userId}")]
+        public IActionResult Details(int userId)
 		{
 			//// Retrieve user details based on the id parameter
-			//var user = MockUserRepo.GetUserById(id);
+			var user = _dataContext.Users.FirstOrDefault(user => user.Id == userId);
 
-			//if (user == null)
-			//{
-			//    return NotFound(); // Return a 404 Not Found response if user is not found
-			//}
+			if (user == null)
+			{
+				return NotFound();
+			}
 
-			return View();
+			return View(user);
 		}
 
 		private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
@@ -193,7 +194,7 @@ namespace Skelbimu_sistema.Controllers
 				new(JwtRegisteredClaimNames.Sub, user.Email),
 				new(JwtRegisteredClaimNames.Email, user.Email),
 				new("Id", user.Id.ToString(), ClaimValueTypes.Integer),
-				new("Role", user.Role.ToString(), ClaimValueTypes.Integer)
+				new("Role", user.Role.ToString(), ClaimValueTypes.String)
 			};
 
 			var tokenDescriptor = new SecurityTokenDescriptor

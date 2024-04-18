@@ -12,9 +12,11 @@ namespace Skelbimu_sistema.Models
 		public string Reason { get; set; } = string.Empty;
 
 		[ForeignKey("UserId")]
+		public int UserId { get; set; }
 		public User User { get; set; }
 
 		[ForeignKey("ProductId")]
+		public int ProductId { get; set; }
 		public Product Product { get; set; }
 	}
 }

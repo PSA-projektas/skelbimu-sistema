@@ -14,7 +14,7 @@
         @foreach (var product in Model)
         {
             // Check if the product was uploaded by the current user
-            if (product.Seller.Id == currentUserId)
+            if (product.UserId == currentUserId)
             {
                 <div class="col-lg-4 col-md-6 mb-4">
                     <div class="card h-100">

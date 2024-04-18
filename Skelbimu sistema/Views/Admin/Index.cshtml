@@ -33,13 +33,13 @@
 		</div>
 		<div class="col-8">
 			<div class="row mb-2">
-				<a asp-controller="Admin" asp-action="Products" asp-route-filter="suspended" class="btn btn-primary btn-block">Suspenduotų skelbimų: 2</a>
+				<a asp-controller="Admin" asp-action="Products" asp-route-filter="suspended" class="btn btn-primary btn-block">Suspenduotų skelbimų: @ViewData["SuspendedCount"]</a>
 			</div>
 			<div class="row mb-2">
-				<a asp-controller="Admin" asp-action="Products" asp-route-filter="corrected" class="btn btn-primary btn-block">Pataisytų skelbimų: 1</a>
+				<a asp-controller="Admin" asp-action="Products" asp-route-filter="corrected" class="btn btn-primary btn-block">Pataisytų skelbimų: @ViewData["CorrectedCount"]</a>
 			</div>
 			<div class="row">
-				<a asp-controller="Admin" asp-action="Products" asp-route-filter="reported" class="btn btn-primary btn-block">Skelbimų su perspėjimais: 4</a>
+				<a asp-controller="Admin" asp-action="Products" asp-route-filter="reported" class="btn btn-primary btn-block">Skelbimų su perspėjimais: @ViewData["ReportedCount"]</a>
 			</div>
 		</div>
 	</div>

@@ -27,7 +27,18 @@ namespace Skelbimu_sistema.Models
         public Category Category { get; set; }
 
         [ForeignKey("UserId")]
-        public User Seller { get; set; }
+        public int UserId { get; set; }
+        public User User { get; set; }
+
+        /// <summary>
+        /// Navigation property for the product's reports
+        /// </summary>
+        public ICollection<Report> Reports { get; set; } = new List<Report>();
+
+        /// <summary>
+        /// Navigation property for the product's suspension
+        /// </summary>
+        public Suspension? Suspension { get; set; }
     }
 
     public enum ProductState

@@ -2,7 +2,7 @@
     ViewData["Title"] = "Skelbimo administracinė informacija";
 }
 
-@model Skelbimu_sistema.ViewModels.ProductWithAdminInfo
+@model Skelbimu_sistema.Models.Product
 
 <div class="container mt-5">
     <div class="row justify-content-center">
@@ -10,11 +10,11 @@
         <div class="col-lg-12 col-md-12 mb-4">
             <div class="card">
                 <div class="card-body">
-                    <h2 class="mb-2">@Model.Product.Name</h2>
-                    <p class="mb-4">Kategorija > Kategorija > @Model.Product.Category</p>
+                    <h2 class="mb-2">@Model.Name</h2>
+                    <p class="mb-4">Kategorija > Kategorija > @Model.Category</p>
                     <div class="card">
                         <div class="card-body">
-                            <p class="card-text">@Model.Product.Description</p>
+                            <p class="card-text">@Model.Description</p>
                         </div>
                     </div>
                 </div>
@@ -37,6 +37,11 @@
                                     <p class="card-text">@report.Reason</p>
                                 </div>
                             </div>
+                            <form method="post" asp-action="DeleteReport" asp-controller="Admin" class="mt-2">
+                                <input type="hidden" name="reportId" value="@report.Id" />
+                                <input type="hidden" name="productId" value="@Model.Id" />
+                                <button type="submit" class="btn btn-danger">Pašalinti perspėjimą</button>
+                            </form>
                         </div>
                     </div>
                 }
@@ -49,17 +54,59 @@
         <div class="row justify-content-center">
             <h1 class="mb-4 text-center">Suspendavimo informacija</h1>
             <div class="col-lg-12 col-md-12 mb-4">
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <h3 class="mb-2">@Model.Suspension.Date</h3>
-                        <div class="card">
-                            <div class="card-body">
-                                <p class="card-text">@Model.Suspension.Reason</p>
+                <form method="post" asp-action="UpdateSuspension" asp-controller="Admin">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h3 class="mb-2">@Model.Suspension.Date.ToString("yyyy-MM-dd")</h3>
+                            <div class="card">
+                                <div class="card-body">
+                                    <input type="hidden" name="suspensionId" value="@Model.Suspension.Id" />
+                                    <textarea id="reason" name="reason" class="form-control" disabled>@Model.Suspension.Reason</textarea>
+                                    <input type="hidden" name="productId" value="@Model.Id" />
+
+                                    <!-- Edit button -->
+                                    <button type="button" class="btn btn-secondary mt-2" id="editButton">Redaguoti suspendavimą</button>
+
+                                    <!-- Submit button -->
+                                    <button type="submit" class="btn btn-primary mt-2" id="submitButton" style="display:none;">Atnaujinti suspendavimą</button>
+
+                                    <!-- Cancel button -->
+                                    <button type="button" class="btn btn-danger mt-2" id="cancelButton" style="display:none;">Atšaukti</button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                </form>
+                <!-- Form for removing the suspension -->
+                <form id="deleteForm" asp-action="DeleteSuspension" asp-controller="Admin" method="post" style="display: inline;">
+                    <input type="hidden" name="suspensionId" value="@Model.Suspension.Id" />
+                    <button type="submit" class="btn btn-danger mt-2">Delete Suspension</button>
+                </form>
             </div>
         </div>
-    }    
+
+        <script>
+            document.getElementById('editButton').addEventListener('click', function () {
+                document.getElementById('reason').disabled = false;
+                document.getElementById('submitButton').style.display = 'inline-block';
+                document.getElementById('cancelButton').style.display = 'inline-block';
+                document.getElementById('deleteForm').style.display = 'none';
+                this.style.display = 'none';
+            });
+
+            document.getElementById('cancelButton').addEventListener('click', function () {
+                document.getElementById('reason').disabled = true;
+                document.getElementById('reason').value = '@Model.Suspension.Reason'; // Reset the textarea to the original value
+                document.getElementById('submitButton').style.display = 'none';
+                document.getElementById('editButton').style.display = 'inline-block';
+                document.getElementById('deleteForm').style.display = 'inline';
+                this.style.display = 'none';
+            });
+        </script>
+
+    }
+    else
+    {
+        <a asp-controller="Admin" asp-action="Suspend" asp-route-productId="@Model.Id" class="btn btn-danger btn-block">Suspenduoti skelbimą</a>
+    } 
 </div>

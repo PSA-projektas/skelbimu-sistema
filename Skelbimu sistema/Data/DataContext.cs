@@ -16,6 +16,4 @@ namespace Skelbimu_sistema.Data
         public DbSet<Report> Reports { get; set; }
         public DbSet<Suspension> Suspensions { get; set; }
     }
-    
-    
 }

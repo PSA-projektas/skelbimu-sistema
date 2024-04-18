@@ -49,7 +49,7 @@ builder.Services.AddAuthentication(x =>
 builder.Services.AddAuthorization(options =>
 {
 	options.AddPolicy("IsAdmin", p =>
-		p.RequireClaim("Role", "2"));
+		p.RequireClaim("Role", "Admin"));
 });
 
 var app = builder.Build();
