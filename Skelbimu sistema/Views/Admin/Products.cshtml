@@ -2,6 +2,8 @@
     ViewData["Title"] = "Administracijos skelbimų sąrašas";
 }
 
+@model List<Skelbimu_sistema.Models.Product>
+
 <div class="card justify-content-center m-5 p-4">
     <h1 class="text-center">Skelbimai</h1>
     <p class="text-center">Sistemos skelbimų sąrašas.</p>
@@ -14,25 +16,44 @@
                 <th>Id</th>
                 <th>Pavadinimas</th>
                 <th>Pardavėjas</th>
-                <th><a class="text-white" asp-controller="Admin" asp-action="Products" asp-route-filter="suspended">Suspenduotas</a></th>
+                <th>Būsena</th>
+                <th><a class="text-white" asp-controller="Admin" asp-action="Products" asp-route-filter="suspended">Suspendavimo būsena</a></th>
                 <th><a class="text-white" asp-controller="Admin" asp-action="Products" asp-route-filter="reported">Perspėjimų skaičius</a></th>
                 <th>Veiksmai</th>
             </tr>
         </thead>
         <tbody>
-            @for(int i = 0; i < 5; i++)
+            @foreach (var product in Model)
             {
-                        <tr>
-                            <td>@i</td>
-                            <td>Skelbimo pavadinimas</td>
-                            <td><a href="/admin/adverts?sellerId=1">Pardavėjo vardas ir pavardė</a></td>
-                            <td>Ne</td>
-                            <td>@i</td>
-                            <td>
-                                <a href="/user/details/1" title="Peržiūrėti pardavėjo paskyrą"><i class="bi bi-file-person-fill"></i></a>
-                                <a asp-controller="Admin" asp-action="ProductDetails" asp-route-productId="@i" title="Peržiūrėti skelbimo administracinę informaciją"><i class="bi bi-file-richtext-fill"></i></a>
-                            </td>
-                        </tr>
+                <tr>
+                    <td>@product.Id</td>
+                    <td>@product.Name</td>
+                    <td>@product.User.Email</td>
+                    @switch (product.State)
+                    {
+                        case ProductState.Active:
+                            <td>Aktyvus</td>
+                            break;
+                        case ProductState.Reserved:
+                            <td>Rezervuotas</td>
+                            break;
+                        case ProductState.Closed:
+                            <td>Uždarytas</td>
+                            break;
+                        case ProductState.Suspended:
+                            <td>Suspenduotas</td>
+                            break;
+                        default:
+                            <td></td>
+                            break;
+                    }
+                    <td>@(product.State == ProductState.Suspended ? "Suspenduotas, " + (product.Suspension!.Reviewed ? "peržiūrėtas" : "neperžiūrėtas") : "Nesuspenduotas")</td>
+                    <td>@product.Reports.Count</td>
+                    <td>
+                        <a asp-controller="User" asp-action="Details" asp-route-userId="@product.UserId" title="Peržiūrėti pardavėjo paskyrą"><i class="bi bi-file-person-fill"></i></a>
+                        <a asp-controller="Admin" asp-action="ProductDetails" asp-route-productId="@product.Id" title="Peržiūrėti skelbimo administracinę informaciją"><i class="bi bi-file-richtext-fill"></i></a>
+                    </td>
+                </tr>
             }
         </tbody>
     </table>

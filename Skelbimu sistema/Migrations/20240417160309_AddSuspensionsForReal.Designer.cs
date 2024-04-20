@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Skelbimu_sistema.Data;
 
@@ -11,9 +12,11 @@ using Skelbimu_sistema.Data;
 namespace Skelbimu_sistema.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20240417160309_AddSuspensionsForReal")]
+    partial class AddSuspensionsForReal
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -120,13 +123,9 @@ namespace Skelbimu_sistema.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("Reviewed")
-                        .HasColumnType("bit");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("ProductId")
-                        .IsUnique();
+                    b.HasIndex("ProductId");
 
                     b.ToTable("Suspensions");
                 });
@@ -190,25 +189,25 @@ namespace Skelbimu_sistema.Migrations
 
             modelBuilder.Entity("Skelbimu_sistema.Models.Product", b =>
                 {
-                    b.HasOne("Skelbimu_sistema.Models.User", "User")
-                        .WithMany("Products")
+                    b.HasOne("Skelbimu_sistema.Models.User", "Seller")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("User");
+                    b.Navigation("Seller");
                 });
 
             modelBuilder.Entity("Skelbimu_sistema.Models.Report", b =>
                 {
                     b.HasOne("Skelbimu_sistema.Models.Product", "Product")
-                        .WithMany("Reports")
+                        .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Skelbimu_sistema.Models.User", "User")
-                        .WithMany("Reports")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -221,26 +220,12 @@ namespace Skelbimu_sistema.Migrations
             modelBuilder.Entity("Skelbimu_sistema.Models.Suspension", b =>
                 {
                     b.HasOne("Skelbimu_sistema.Models.Product", "Product")
-                        .WithOne("Suspension")
-                        .HasForeignKey("Skelbimu_sistema.Models.Suspension", "ProductId")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Product");
-                });
-
-            modelBuilder.Entity("Skelbimu_sistema.Models.Product", b =>
-                {
-                    b.Navigation("Reports");
-
-                    b.Navigation("Suspension");
-                });
-
-            modelBuilder.Entity("Skelbimu_sistema.Models.User", b =>
-                {
-                    b.Navigation("Products");
-
-                    b.Navigation("Reports");
                 });
 #pragma warning restore 612, 618
         }

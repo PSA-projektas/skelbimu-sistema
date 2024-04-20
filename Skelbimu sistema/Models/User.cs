@@ -13,12 +13,30 @@ namespace Skelbimu_sistema.Models
         public byte[] PasswordHash { get; set; } = new byte[32];
 		public byte[] PasswordSalt { get; set; } = new byte[32];
 		public string? PhoneNumber { get; set; } = null;
-        public int Role { get; set; } = 0;
+        public UserRole Role { get; set; } = 0;
         public bool Blocked { get; set; } = false;
 		public string? VerificationToken { get; set; }
         public DateTime? VerificationDate { get; set; }
         public string? PasswordResetToken { get; set; }
         public DateTime? ResetTokenExpirationDate { get; set; }
         public string? SearchKeyWords { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Navigation property for the user's products
+        /// </summary>
+        public ICollection<Product> Products { get; set; } = new List<Product>();
+
+        /// <summary>
+        /// Navigation property for the user's reports
+        /// </summary>
+        public ICollection<Report> Reports { get; set; } = new List<Report>();
+    }
+
+    public enum UserRole
+    {
+        Unverified = 0,
+        Buyer = 1,
+        Seller = 2,
+        Admin = 3
     }
 }

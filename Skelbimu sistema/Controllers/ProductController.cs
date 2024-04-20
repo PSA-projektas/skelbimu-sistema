@@ -48,6 +48,7 @@ namespace Skelbimu_sistema.Controllers
                 return View("Create", request); // Return to the registration view with errors
             }
             int userId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == "Id")!.Value);
+            User user = _dataContext.Users.Find(userId)!;
             Product product = new Product();
 
            
@@ -58,7 +59,7 @@ namespace Skelbimu_sistema.Controllers
             product.StartDate = request.StartDate.ToString("yyyy-MM-dd"); // Format date
             product.EndDate = request.EndDate.ToString("yyyy-MM-dd");  // Format date
             product.Category = request.Category;
-            product.UserId = userId;
+            product.User = user;
 
             _dataContext.Products.Add(product);
             await _dataContext.SaveChangesAsync();
@@ -70,7 +71,7 @@ namespace Skelbimu_sistema.Controllers
         public IActionResult Details(int id)
         {
             // Retrieve the product by id
-            var product = _dataContext.Products.FirstOrDefault(p => p.Id == id);
+            var product = _dataContext.Products.Include(product => product.User).FirstOrDefault(product => product.Id == id);
 
             if (product == null)
             {
@@ -87,7 +88,7 @@ namespace Skelbimu_sistema.Controllers
             int userId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == "Id")!.Value);
 
             var userInventory = await _dataContext.Products
-                                .Where(p => p.UserId == userId)
+                                .Where(product => product.UserId == userId)
                                 .ToListAsync();
             ViewData["UserId"] = userId;
 
