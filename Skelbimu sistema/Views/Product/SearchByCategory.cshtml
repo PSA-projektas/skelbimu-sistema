@@ -14,7 +14,6 @@
         { Category.Peripherals, "Išoriniai įrenginiai" },
         { Category.Other, "Kiti" }
     };
-
     string categoryHeader = "Visos kategorijos"; // Numatytasis antraštės tekstas
     if (ViewBag.SelectedCategory != null)
     {
@@ -25,9 +24,10 @@
 
 <div class="container">
     <h1 class="display-4">Paieškos rezultatai (@categoryHeader)  </h1>
+    <input type="hidden" id="selectedCategory" name="selectedCategory" value="@ViewBag.SelectedCategory" />
     <div class="row">
         <div class="col-lg-9">
-            <div class="row">
+            <div class="row" id="productList">
                 @if (Model.Any())
                 {
                     @foreach (var product in Model)
@@ -54,20 +54,70 @@
             </div>
         </div>
         <div class="col-lg-3">
-            <h4>Filtruoti pagal kainą:</h4>
-            <input type="range" id="minPrice" name="minPrice" min="0" max="1000" value="0" step="10" oninput="updateSliderValue('min')">
-            <span id="minPriceValue">$0</span>
-            <br>
-            <input type="range" id="maxPrice" name="maxPrice" min="0" max="1000" value="1000" step="10" oninput="updateSliderValue('max')">
-            <span id="maxPriceValue">$1000</span>
-            <br>
-            <button onclick="filterResults()">Filtruoti</button>
-            <div id="priceRangeValues"></div>
+            <h4>Filtruoti pagal kainą:</h4>           
+<input type="range" id="minPrice" name="minPrice" min="0" max="1000" value="0" step="10" oninput="updateSliderValue('min')">
+            <input type="number" id="minPriceInput" name="minPriceInput" min="0" max="1000" step="5" oninput="updateSliderValue('min')">
+
+                <span id="minPriceValue">$0</span>
+                <br>
+                <input type="range" id="maxPrice" name="maxPrice" min="0" max="1000" value="1000" step="10" oninput="updateSliderValue('max')">
+            <input type="number" id="maxPriceInput" name="maxPriceInput" min="0" max="1000" step="5" oninput="updateSliderValue('max')">
+
+                <span id="maxPriceValue">$1000</span>
+                <br>
+
+                <button onclick="filterResults()">Filtruoti</button>
+                <div id="priceRangeValues"></div>         
         </div>
     </div>
 </div>
 
 <script>
+    function updateSliderValue(type) {
+        var slider = type === 'min' ? document.getElementById("minPrice") : document.getElementById("maxPrice");
+        var valueSpan = type === 'min' ? document.getElementById("minPriceValue") : document.getElementById("maxPriceValue");
+        var inputValue = type === 'min' ? document.getElementById("minPriceInput").value : document.getElementById("maxPriceInput").value;
+
+        valueSpan.innerHTML = "$" + (inputValue !== "" ? inputValue : slider.value);
+    }
+
+
+    function filterResults() {
+        var minPriceInput = document.getElementById("minPriceInput").value;
+        var maxPriceInput = document.getElementById("maxPriceInput").value;
+
+        var minPrice = minPriceInput !== "" ? minPriceInput : document.getElementById("minPrice").value;
+        var maxPrice = maxPriceInput !== "" ? maxPriceInput : document.getElementById("maxPrice").value;
+        var selectedCategory = document.getElementById("selectedCategory").value;
+
+        // Redirect to FilterByPrice action with selected price range and category
+        window.location.href = '@Url.Action("FilterByPrice", "Product")' + '?minPrice=' + minPrice + '&maxPrice=' + maxPrice + '&selectedCategory=' + selectedCategory;
+    }
+
+
+
+</script>
+
+@* <script>
+    function filterResults() {
+        var minPrice = document.getElementById("minPrice").value;
+        var maxPrice = document.getElementById("maxPrice").value;
+
+        $.ajax({
+            type: "GET",
+            url: "@Url.Action("FilterByPrice", "Filter")",
+            data: { minPrice: minPrice, maxPrice: maxPrice },
+            success: function (data) {
+                $('#productList').html(data);
+            },
+            error: function () {
+                alert("Error occurred while filtering products.");
+            }
+        });
+    }
+</script> *@
+
+@* <script>
     function updateSliderValue(type) {
         var slider = type === 'min' ? document.getElementById("minPrice") : document.getElementById("maxPrice");
         var valueSpan = type === 'min' ? document.getElementById("minPriceValue") : document.getElementById("maxPriceValue");
@@ -82,5 +132,5 @@
 
         // Redirect or send AJAX request to FilterController with minPrice and maxPrice values
     }
-</script>
+</script> *@
 
