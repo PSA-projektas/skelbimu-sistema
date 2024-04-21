@@ -3,6 +3,12 @@
 @{
     ViewData["Title"] = "Skelbimų puslapis";
 }
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["SuccessMessage"]
+    </div>
+}
 
 <div class="text-center">
     <h1 class="display-4">Visi skelbimai</h1>
@@ -19,6 +25,7 @@
                         <h4 class="card-title">@product.Name</h4>
                         <p class="card-text">@product.Description</p>
                         <p class="card-text">Kaina: $@product.Price</p>
+                        <p class="card-text">Būsena: @(product.State == ProductState.Active ? "Aktyvus" : "Rezervuotas")</p>
                     </div>
                     <div class="card-footer">
                         <a href="@Url.Action("Details", "Product", new { id = product.Id })" class="btn btn-primary">Peržiūrėti detaliau</a>

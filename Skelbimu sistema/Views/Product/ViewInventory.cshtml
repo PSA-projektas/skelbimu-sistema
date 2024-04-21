@@ -3,11 +3,21 @@
 @{
     ViewData["Title"] = "Inventory";
     int currentUserId = (int)ViewData["UserId"];
+
+}
+
+@if (TempData["SuccessMessageInventory"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["SuccessMessageInventory"]
+    </div>
 }
 
 <div class="text-center">
     <h1 class="display-4">Jūsų inventorius</h1>
 </div>
+
+
 
 <div class="container">
     <div class="row">
@@ -22,13 +32,17 @@
                         <div class="card-body">
                             <h4 class="card-title">@product.Name</h4>
                             <p class="card-text">@product.Description</p>
-                            <p class="card-text">Price: $@product.Price</p>
+                            <p class="card-text">Kaina: $@product.Price</p>
+                            <p class="card-text">Kategorija: @product.Category</p>
+                            <p class="card-text">Būsena: @(product.State == ProductState.Active ? "Aktyvus" : "Rezervuotas")</p>
+
                         </div>
                         <div class="card-footer">
                             <button class="btn btn-danger" onclick="deleteProduct('@product.Id')">Naikinti</button>
                             <button class="btn btn-primary" onclick="editProduct('@product.Id')">Redaguoti</button>
-                            <button class="btn btn-success" onclick="changeProductState('@product.Id')">Keisti būseną</button>
+                            <button class="btn btn-info" onclick="changeProductState('@product.Id')">Keisti būseną</button>
                         </div>
+
                     </div>
                 </div>
             }
@@ -36,24 +50,63 @@
     </div>
 </div>
 
-@section Scripts {
-    <script>
-        function deleteProduct(productId) {
-            //naikinimo spageciai
+<script>
 
-            alert("Naikinti produkta su ID: " + productId);
+
+    function deleteProduct(productId) {
+        if (confirm('Ar tikrai norite ištrinti šį produktą?')) {
+            var token = $('input[name="__RequestVerificationToken"]').val(); // Get anti-forgery token
+            $.ajax({
+                url: '/skelbimas/Product/Delete/' + productId, // Update the URL to match the correct route
+                type: 'POST',
+                data: { id: productId, __RequestVerificationToken: token }, // Pass the anti-forgery token
+                success: function (response) {
+                    displaySuccessMessage('Produktas sėkmingai ištrintas!');
+                    location.reload();
+                },
+                error: function (xhr, status, error) {
+                    console.error('Klaida trinant produktą:', error);
+                    displaySuccessMessage('Produktas neištrintas!');
+                }
+            });
         }
+    }
 
-        function editProduct(productId) {
-            //editinimo spageciai
 
-            alert("Redaguoti produkta su ID: " + productId);
-        }
 
-        function changeProductState(productId) {
-            //busenos keitimo spageciai
+    function editProduct(productId) {
+        // Implement edit functionality here
 
-            alert("Keisti produkto būseną, ID: " + productId);
-        }
-    </script>
-}
+        window.location.href = '/skelbimas/Product/Edit?id=' + productId;
+    }
+
+    function changeProductState(productId) {
+        // Implement state change functionality here
+        // Example: AJAX request to change product state
+        $.ajax({
+            url: '/skelbimas/Product/ChangeState',
+            type: 'POST',
+            data: { productId: productId },
+            success: function (response) {
+                // Handle success response
+                console.log('Product state changed successfully.');
+                displaySuccessMessage('Produkto būsena pakeista sėkmingai!');
+                location.reload();
+            },
+            error: function (xhr, status, error) {
+                // Handle error response
+                console.error('Error changing product state:', error); // Log the error message
+                console.error('Status:', status); // Log the status
+                console.error('Response:', xhr.responseText); // Log the response text
+            }
+        });
+    }
+    // Function to display success message to user
+    function displaySuccessMessage(message) {
+        // You can implement this function to display the success message in your desired way
+        // For example, you can show a notification, alert, or update a specific element on the page
+        alert(message); // This is a simple example using alert
+    }
+
+</script>
+

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Skelbimu_sistema.Models;
@@ -60,12 +61,18 @@ namespace Skelbimu_sistema.Controllers
             product.EndDate = request.EndDate.ToString("yyyy-MM-dd");  // Format date
             product.Category = request.Category;
             product.User = user;
+            product.State = 0;
 
             _dataContext.Products.Add(product);
             await _dataContext.SaveChangesAsync();
 
+            // Set success message
+            TempData["SuccessMessage"] = "Produktas patalpintas sėkmingai!";
+
             return RedirectToAction("Index", "Home");
         }
+
+
 
         [Route("product/details")]
         public IActionResult Details(int id)
@@ -94,6 +101,107 @@ namespace Skelbimu_sistema.Controllers
 
             return View(userInventory);
         }
+
+        [Authorize]
+        [HttpPost]
+        [Route("Product/ChangeState")]
+        public IActionResult ChangeState(int productId)
+        {
+            // Retrieve the product by id
+            var product = _dataContext.Products.FirstOrDefault(p => p.Id == productId);
+
+            if (product == null)
+            {
+                return NotFound(); // Product not found
+            }
+
+            // Toggle the state of the product between 0 and 1
+            product.State = (product.State == ProductState.Active) ? ProductState.Reserved : ProductState.Active;
+            // Save changes to the database
+            _dataContext.SaveChanges();
+
+            return RedirectToAction("ViewInventory");
+        }
+        [Authorize]
+        [HttpPost]
+        [Route("Product/Delete/{id}")]
+        [ValidateAntiForgeryToken]
+        public IActionResult Delete(int id)
+        {
+
+            var product = _dataContext.Products.FirstOrDefault(p => p.Id == id);
+
+            // Check if the product exists
+            if (product == null)
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                _dataContext.Products.Remove(product);
+                _dataContext.SaveChanges();
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error deleting product: " + ex.Message);
+                return StatusCode(500); 
+            }
+        }
+
+
+
+        [Authorize]
+        [HttpGet]
+        [Route("Product/Edit")]
+        public IActionResult Edit(int id)
+        {
+            // Retrieve the product by id
+            var product = _dataContext.Products.FirstOrDefault(p => p.Id == id);
+
+            if (product == null)
+            {
+                return NotFound(); // Product not found
+            }
+
+            // Pass the product data to the edit view
+            return View(product);
+        }
+
+        [Authorize]
+        [HttpPost]
+        [Route("Product/Edit")]
+        [ValidateAntiForgeryToken]
+        public IActionResult Edit(Product editedProduct)
+        {
+            // Retrieve the existing product from the database
+            var product = _dataContext.Products.FirstOrDefault(p => p.Id == editedProduct.Id);
+
+            if (product == null)
+            {
+                return NotFound(); // Product not found
+            }
+            //check if editedproduct name is not empty
+            if (string.IsNullOrEmpty(editedProduct.Name))
+            {
+                ModelState.AddModelError("Name", "Pavadinimas negali būti tuščias");
+            }
+            // Update product details with the edited values
+            product.Name = editedProduct.Name;
+            product.Description = editedProduct.Description;
+            product.Price = editedProduct.Price;
+            product.ImageUrl = editedProduct.ImageUrl;
+            product.Category = editedProduct.Category;
+
+            // Save changes to the database
+            _dataContext.SaveChanges();
+            TempData["SuccessMessageInventory"] = "Produktas redaguotas sėkmingai!";
+            return RedirectToAction("ViewInventory"); // Redirect to the inventory view after editing
+        }
+
+
+
 
 
         /// <summary>
