@@ -294,6 +294,24 @@ namespace Skelbimu_sistema.Controllers
             return View("SearchByCategory", products);
         }
 
+        [Route("Product/FilterByPrice")]
+        public IActionResult FilterByPrice(double minPrice, double maxPrice, Category? selectedCategory)
+        {
+            if (selectedCategory == null)
+            {
+                // Jei kategorija nepasirinkta, grąžinkite tuščius rezultatus
+                return View("SearchByCategory", new List<Product>());
+            }
+
+            ViewBag.SelectedCategory = selectedCategory;
+            var filteredProducts = _dataContext.Products
+                .Where(p => p.Price >= minPrice && p.Price <= maxPrice && p.Category == selectedCategory)
+                .ToList();
+
+            return View("SearchByCategory", filteredProducts);
+        }
+
+
         /// <summary>
         /// Saves user search phrase into database
         /// </summary>

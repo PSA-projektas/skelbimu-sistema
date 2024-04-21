@@ -16,7 +16,8 @@ namespace Skelbimu_sistema.Controllers
         public IActionResult FilterByPrice(double minPrice, double maxPrice)
         {
             var filteredProducts = _context.Products.Where(p => p.Price >= minPrice && p.Price <= maxPrice).ToList();
-            return PartialView("_FilteredResults", filteredProducts);
+            return PartialView("FilteredResults", filteredProducts);
         }
+
     }
 }
