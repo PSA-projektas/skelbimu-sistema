@@ -11,12 +11,12 @@
 <form method="post" asp-action="SubmitReport" asp-controller="Admin">
     <input type="hidden" asp-for="ProductId" />
     
-    <div class="form-group">
-        <label asp-for="Reason">Reason for Report</label>
+    <div class="form-group mb-4">
+        <label asp-for="Reason">Perspėjimo priežąstis</label>
         <textarea asp-for="Reason" class="form-control"></textarea>
         <span asp-validation-for="Reason" class="text-danger"></span>
     </div>
 
-    <button type="submit" class="btn btn-primary">Submit Report</button>
+    <button type="submit" class="btn btn-primary">Pateikti perspėjimą</button>
 </form>
 

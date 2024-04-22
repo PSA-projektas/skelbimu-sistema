@@ -44,12 +44,20 @@ namespace Skelbimu_sistema.Controllers
             {
                 ModelState.AddModelError("StartDate", "Pradžios data negali būti vėlesnė nei pabaigos data");
             }
+
+            // Get user and check if not blocked
+            int userId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == "Id")!.Value);
+            User user = _dataContext.Users.Find(userId)!;
+            if (user.Blocked)
+            {
+                ModelState.AddModelError("Name", "Jūs negalite kurti naujų skelbimų, nes esate užblokuotas");
+            }
+
             if (!ModelState.IsValid)
             {
                 return View("Create", request); // Return to the registration view with errors
             }
-            int userId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == "Id")!.Value);
-            User user = _dataContext.Users.Find(userId)!;
+            
             Product product = new Product();
 
            

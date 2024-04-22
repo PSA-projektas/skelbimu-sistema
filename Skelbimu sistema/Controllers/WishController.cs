@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Text;
+using System.Net.Http;
 
 namespace Skelbimu_sistema.Controllers
 {
@@ -42,22 +43,23 @@ namespace Skelbimu_sistema.Controllers
         /// <returns>Id</returns>
         public int GetCurrentUserId()
         {
-            // Retrieve user cookie
-            var userCookie = HttpContext.Request.Cookies["User"];
+            var user = User;
 
-            if (!string.IsNullOrEmpty(userCookie))
+            if (user.Identity != null && user.Identity.IsAuthenticated)
             {
-                // Parse user ID from cookie
-                var userInfo = JsonConvert.DeserializeObject<dynamic>(userCookie);
-                int userId = userInfo.Id;
+                var userIdClaim = user.Claims.FirstOrDefault(c => c.Type == "Id");
 
-                return userId;
-            }
-            else
-            {
-                // User is not authenticated or user cookie is not found, return -1
+                if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
+                {
+                    return userId;
+                }
+
+                // Couldn't get user id from User
                 return -1;
             }
+
+            // User not logged in
+            return -1;
         }
 
         /// <summary>
