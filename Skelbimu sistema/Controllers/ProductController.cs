@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Skelbimu_sistema.Models;
 using Skelbimu_sistema.ViewModels;
+using System.Linq;
 using System.Security.Claims;
 using System.Security.Cryptography;
 
@@ -319,6 +320,33 @@ namespace Skelbimu_sistema.Controllers
             return View("SearchByCategory", filteredProducts);
         }
 
+        [Route("Product/FilterByPriceString")]
+        public IActionResult FilterByPriceString(double minPrice, double maxPrice, string searchString)
+        {
+            // Check if the search string is empty
+            if (string.IsNullOrEmpty(searchString))
+            {
+                // If the search string is empty, return an empty list
+                return View("SearchResults", new List<Product>());
+            }
+
+            // Convert the search string to lowercase for case-insensitive comparison
+            var searchLower = searchString.ToLower();
+
+            // Get all products from the database
+            var allProducts = _dataContext.Products.ToList();
+
+            // Filter products by price range and search string
+            var filteredProducts = allProducts
+                .Where(p => p.Price >= minPrice && p.Price <= maxPrice &&
+                    (p.Name.ToLower().Contains(searchLower) ||
+                    p.Description.ToLower().Contains(searchLower) ||
+                    Enum.GetName(typeof(Category), p.Category)?.ToLower() == searchLower))
+                .ToList();
+
+            // Return the filtered products to the view
+            return View("SearchResults", filteredProducts);
+        }
 
         /// <summary>
         /// Saves user search phrase into database
