@@ -187,6 +187,11 @@ namespace Skelbimu_sistema.Controllers
             {
                 ModelState.AddModelError("Name", "Pavadinimas negali būti tuščias");
             }
+            //check if price is not negative
+            if (editedProduct.Price < 0)
+            {
+                ModelState.AddModelError("Price", "Kaina negali būti neigiamas skaičius");
+            }
             // Update product details with the edited values
             product.Name = editedProduct.Name;
             product.Description = editedProduct.Description;
