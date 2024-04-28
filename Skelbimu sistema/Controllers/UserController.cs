@@ -3,13 +3,17 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using MimeKit;
+using MimeKit.Text;
 using Newtonsoft.Json;
 using Skelbimu_sistema.Models;
 using Skelbimu_sistema.ViewModels;
 using System.IdentityModel.Tokens.Jwt;
+using MailKit.Net.Smtp;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using MailKit.Security;
 
 namespace Skelbimu_sistema.Controllers
 {
@@ -64,6 +68,38 @@ namespace Skelbimu_sistema.Controllers
 			await _dataContext.SaveChangesAsync();
 
 			return RedirectToAction("Index", "Home"); // TODO: pass a success message
+		}
+
+		public IActionResult SendVerification(string token)
+		{
+			var email = new MimeMessage();
+			email.From.Add(MailboxAddress.Parse("dorothy19@ethereal.email"));
+			email.To.Add(MailboxAddress.Parse("dorothy19@ethereal.email"));
+			email.Subject = "Registracijos patvirtinimas";
+			email.Body = new TextPart(TextFormat.Html) { Text = token };
+
+			using var smtp = new SmtpClient();
+			smtp.Connect("smtp.ethereal.email", 587, SecureSocketOptions.StartTls); // TODO: maybe use gmail or office?
+			smtp.Authenticate("dorothy19@ethereal.email", "pB67aCYMenZaWj39Y7");
+			smtp.Send(email);
+			smtp.Disconnect(true);
+
+			return RedirectToAction("User", "Login");
+		}
+
+		[HttpPost("patvirtinti")]
+		public async Task<IActionResult> Verify(string token)
+		{
+			var user = await _dataContext.Users.FirstOrDefaultAsync(u => u.VerificationToken == token);
+			if(user == null)
+			{
+				return BadRequest("Netinkamas tokenas");
+			}
+
+			user.VerificationDate = DateTime.Now;
+			await _dataContext.SaveChangesAsync();
+
+			return Login();
 		}
 
 		[HttpGet("prisijungimas")]
