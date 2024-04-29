@@ -33,7 +33,7 @@ namespace Skelbimu_sistema.Services
                 }
             };
         }
-        public Task<Payment> CreateOrderAsync(decimal amount, string returnUrl, string cancelUrl)
+        public async Task<Payment> CreateOrderAsync(decimal amount, string returnUrl, string cancelUrl)
         {
             var apiContext = new APIContext(new OAuthTokenCredential(configuration["PayPal:ClientId"], configuration["PayPal:ClientSecret"]).GetAccessToken());
             var transaction = new Transaction()
@@ -57,9 +57,7 @@ namespace Skelbimu_sistema.Services
                 }
             };
             var createdPayment = payment.Create(apiContext);
-            //TODO: Check if payment is created
-            return Task.FromResult(createdPayment);
-
+            return createdPayment;
         }
     }
 }
