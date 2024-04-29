@@ -6,10 +6,12 @@ using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using Skelbimu_sistema.Models;
 using Skelbimu_sistema.ViewModels;
+using Skelbimu_sistema.Services;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.EntityFrameworkCore;
 
 namespace Skelbimu_sistema.Controllers
 {
@@ -18,12 +20,16 @@ namespace Skelbimu_sistema.Controllers
 	public class UserController : Controller
 	{
 		private readonly DataContext _dataContext;
+		private readonly IUnitOfWork _unitOfWork;
+		private readonly ILogger _logger;
         private const string TokenSecretKey = "SKELBIMUSISTEMASECRETTOKENKEY12345";
 		private static readonly TimeSpan TokenLifetime = TimeSpan.FromHours(1);
 
-        public UserController(DataContext dataContext)
+        public UserController(DataContext dataContext, ILogger<HomeController> logger, IUnitOfWork unitOfWork)
 		{
 			_dataContext = dataContext;
+			_logger = logger;
+			_unitOfWork = unitOfWork;
 		}
 
 		[HttpGet("registracija")]
@@ -214,6 +220,74 @@ namespace Skelbimu_sistema.Controllers
 
 			return jwt;
         }
+
+        [Authorize]
+        [HttpGet("PaymentSuccessful")]
+        public IActionResult PaymentSuccessful(string paymentId, string token, string PayerID)
+		{
+            int userId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == "Id")!.Value);
+
+            try
+            {
+                var user = _dataContext.Users.FirstOrDefault(u => u.Id == userId);
+                if (user != null)
+                {
+                    user.Role = UserRole.Seller; 
+                    _dataContext.SaveChanges();
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+            catch (DbUpdateException ex)
+            {
+                return StatusCode(500, "An error occurred while updating the database.");
+            }
+
+            ViewData["paymentId"] = paymentId;
+			ViewData["token"] = token;
+			ViewData["PayerID"] = PayerID;
+			return View();
+        }
+
+        [Authorize]
+        [HttpGet("PaymentUnsuccessful")]
+        public IActionResult PaymentUnsuccessful()
+		{
+			return View();
+		}
+
+        [Authorize]
+        [HttpPost]
+		public async Task<IActionResult> PayUsingPaypal()
+		{
+			try
+			{
+				decimal amount = 5;
+				string returnUrl = "https://localhost:7188/naudotojai/PaymentSuccessful";
+				string cancelUrl = "https://localhost:7188/naudotojai/PaymentUnsuccessful";
+
+				var createdPayment = await _unitOfWork.PaypalServices.CreateOrderAsync(amount, returnUrl, cancelUrl);
+
+				string approvalUrl = createdPayment.links.FirstOrDefault(link => link.rel.ToLower() == "approval_url").href;
+
+				if(!string.IsNullOrEmpty(approvalUrl))
+				{
+                    return Redirect(approvalUrl);
+                }
+				else
+				{
+                    return Redirect(cancelUrl);
+                }
+			}
+			catch (Exception ex)
+			{
+				TempData["error"] = ex.Message;
+            }
+			return RedirectToAction("Index", "Home");
+
+		}
 
 		/// <summary>
 		/// Returns logged in user's id

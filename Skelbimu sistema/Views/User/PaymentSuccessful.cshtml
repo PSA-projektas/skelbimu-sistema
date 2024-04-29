@@ -1,0 +1,31 @@
+﻿@{
+    ViewData["Title"] = "Apmokėjimas sėkmingas";
+    var paymentId = ViewData["paymentId"] as string;
+    var token = ViewData["token"] as string;
+    var PayerID = ViewData["PayerID"] as string;
+}
+
+<!DOCTYPE html>
+<html class="text-center">
+<head>
+    <title>@ViewData["Title"]</title>
+</head>
+<body>
+    <h1 style="color: green;">Apmokėjimas buvo atliktas sėkmingai!</h1>
+    <p>Jūsų apmokėjimas buvo sėkmingas. Dabar galite grįžti ir naudotis pardavėjo funkcijomis!</p>
+    <div>
+        <h2>Apmokėjimo informacija:</h2>
+        <p>Apmokėjimo numeris: @paymentId</p>
+        <p>Bilietas: @token</p>
+        <p>Mokėtojo numeris: @PayerID</p>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <form id="backForm" method="get" action="@Url.Action("Index", "Home")">
+                <button type="submit" class="btn btn-secondary mt-3">Sugrįžti atgal</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
