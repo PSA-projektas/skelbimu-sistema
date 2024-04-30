@@ -13,6 +13,7 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Text;
 using System.Net.Http;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Skelbimu_sistema.Controllers
 {
@@ -36,6 +37,64 @@ namespace Skelbimu_sistema.Controllers
             List<Product> suggestions = CreateSuggestionsBySearch();
             return View("SuggestionList", suggestions); 
         }
+
+        [Authorize]
+        [HttpGet("wishCreation")]
+        public async Task<IActionResult> Create()
+        {
+            WishCreationRequest request = new WishCreationRequest();
+
+            int userId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == "Id")!.Value);
+            var user = await _dataContext.Users.FindAsync(userId);
+
+            ViewData["UserRole"] = user.Role;
+
+            return View(request);
+        }
+
+        [Authorize]
+        [HttpPost("wishCreateSubmit")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SubmitCreate(WishCreationRequest request)
+        {
+            // Validate the StartDate and EndDate
+            if (request.PriceHigh < request.PriceLow)
+            {
+                ModelState.AddModelError("PriceHigh", "Maksimali kaina turi būti aukštesnė už minimalią");
+            }
+
+            // Get user and check if not blocked
+            int userId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == "Id")!.Value);
+            User user = _dataContext.Users.Find(userId)!;
+            if (user.Blocked)
+            {
+                ModelState.AddModelError("Name", "Jūs negalite kurti naujų skelbimų, nes esate užblokuotas");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return View("Create", request); // Return to the registration view with errors
+            }
+
+            Wish wish = new Wish();
+
+            wish.Name = request.Name;
+            wish.SearchKeyWords = request.SearchKeyWords;
+            wish.PriceLow = request.PriceLow;
+            wish.PriceHigh = request.PriceHigh;
+            wish.PaymentMethod = request.PaymentType;
+            wish.Category = request.Category;
+            wish.User = user;
+
+            _dataContext.UserWishes.Add(wish);  
+            await _dataContext.SaveChangesAsync();
+
+            // Set success message
+            TempData["SuccessMessage"] = "Noras sukurtas sėkmingai!";
+
+            return RedirectToAction("Index", "Home");
+        }
+
 
         /// <summary>
         /// Returns logged in user's id

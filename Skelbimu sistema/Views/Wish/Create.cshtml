@@ -1,0 +1,106 @@
+﻿@model Skelbimu_sistema.ViewModels.WishCreationRequest
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Noro kūrimo langas</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+
+@* @if ((int)ViewData["UserRole"] == 1)
+{
+    <div class="text-center">
+        <p>Norint kurti skelbimus turite turėti pardavėjo statusą, kurį galite įsigyti už 5$.</p>
+        <form method="post" asp-controller="User" asp-action="PayUsingPaypal">
+            <button type="submit" class="btn btn-success">Pirkti pardavėjo statusą su Paypal</button>
+        </form>
+    </div>
+}
+else
+{ *@
+    <body>
+        <div class="container">
+            <h2 class="text-center">Noro kūrimas</h2>
+
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <form method="post" asp-action="SubmitCreate">
+                        <hr />
+                        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+                        <!-- Wish fields -->
+                        <div class="form-group row">
+                            <label asp-for="Name" class="control-label col-md-2">Pavadinimas:</label>
+                            <div class="col-md-10">
+                                <input asp-for="Name" class="form-control" />
+                                <span asp-validation-for="Name" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label asp-for="SearchKeyWords" class="control-label col-md-2">Raktažodžiai:</label>
+                            <div class="col-md-10">
+                                <input asp-for="SearchKeyWords" class="form-control" />
+                                <span asp-validation-for="SearchKeyWords" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label asp-for="PriceLow" class="control-label col-md-2">Kaina nuo:</label>
+                            <div class="col-md-10">
+                            <input asp-for="PriceLow" class="form-control" />
+                            <span asp-validation-for="PriceLow" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label asp-for="PriceHigh" class="control-label col-md-2">Kaina iki:</label>
+                            <div class="col-md-10">
+                                <input asp-for="PriceHigh" class="form-control" />
+                                <span asp-validation-for="PriceHigh" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label asp-for="Category" class="control-label col-md-2">Kategorija:</label>
+                            <div class="col-md-10">
+                                <select asp-for="Category" class="form-control">
+                                    <option value="">Pasirinkite kategoriją</option>
+                                    @foreach (var category in Html.GetEnumSelectList<Category>())
+                                    {
+                                        <option value="@category.Value">@category.Text</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="Category" class="text-danger"></span>
+                            </div>
+                        </div>
+                    <div class="form-group row">
+                        <label asp-for="PaymentType" class="control-label col-md-2">Norimas mokėjimo būdas:</label>
+                        <div class="col-md-10">
+                            <select asp-for="PaymentType" class="form-control">
+                                @foreach (var type in Html.GetEnumSelectList<WishPaymentType>())
+                                {
+                                    <option value="@type.Value">@type.Text</option>
+                                }
+                            </select>
+                            <span asp-validation-for="PaymentType" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                        <div class="row justify-content-center">
+                            <div class="col-md-12 text-center">
+                                <button type="submit" class="btn btn-primary">Kurti</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="row justify-content-center">
+                <div class="col-md-8 text-center">
+                    <form id="backForm" method="get" action="@Url.Action("Index", "Home")">
+                        <button type="submit" class="btn btn-secondary mt-3">Sugrįžti atgal</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </body>
+@* } *@
+
+</html>
