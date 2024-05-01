@@ -3,8 +3,6 @@
 @{
     ViewData["Title"] = "Wish list";
     int currentUserId = (int)ViewData["UserId"];
-
-
 }
 
 @if (TempData["SuccessMessageWishList"] != null)
@@ -14,9 +12,9 @@
     </div>
 }
 
-    <div class="text-center">
-        <h1 class="display-4">Jūsų norai</h1>
-    </div>
+<div class="text-center">
+    <h1 class="display-4">Jūsų norai</h1>
+</div>
 
 <div class="container">
     <div class="row">
@@ -38,11 +36,7 @@
                             <div class="card-footer" style="text-align: center;">
                                 <button class="btn btn-danger mr-1" onclick="deleteWish('@wish.Id')">Naikinti</button>
                                 <button class="btn btn-primary mr-1" onclick="editWish('@wish.Id')">Redaguoti</button>
-
                                 <button class="btn btn-primary mr-1" onclick="showWishSuggestions('@wish.Id')">Peržiūrėti pasiūlymus</button>
-                           @*  <a class="btn btn-success" href="/Wish/OpenWishSuggestionsPage?id=@wish.Id" style="width: 180px; height: 38px;">
-                                    <span style="color: white;">Peržiūrėti pasiūlymus</span>
-                                </a> *@
                             </div>            
                         </div>
                     </div>         
@@ -82,9 +76,7 @@
 
     // Function to display success message to user
     function displaySuccessMessage(message) {
-        // You can implement this function to display the success message in your desired way
-        // For example, you can show a notification, alert, or update a specific element on the page
-        alert(message); // This is a simple example using alert
+        alert(message); 
     }
 
 </script> 
