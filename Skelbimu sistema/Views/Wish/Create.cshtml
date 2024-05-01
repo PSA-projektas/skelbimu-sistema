@@ -6,17 +6,6 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 
-@* @if ((int)ViewData["UserRole"] == 1)
-{
-    <div class="text-center">
-        <p>Norint kurti skelbimus turite turėti pardavėjo statusą, kurį galite įsigyti už 5$.</p>
-        <form method="post" asp-controller="User" asp-action="PayUsingPaypal">
-            <button type="submit" class="btn btn-success">Pirkti pardavėjo statusą su Paypal</button>
-        </form>
-    </div>
-}
-else
-{ *@
     <body>
         <div class="container">
             <h2 class="text-center">Noro kūrimas</h2>
@@ -101,6 +90,5 @@ else
         </div>
 
     </body>
-@* } *@
 
 </html>

@@ -38,6 +38,11 @@ namespace Skelbimu_sistema.Controllers
             return View("SuggestionList", suggestions); 
         }
 
+
+        /// <summary>
+        /// Create new wish
+        /// </summary>
+        /// <returns>View</returns>
         [Authorize]
         [HttpGet("wishCreation")]
         public async Task<IActionResult> Create()
@@ -52,24 +57,45 @@ namespace Skelbimu_sistema.Controllers
             return View(request);
         }
 
+        /// <summary>
+        /// Submit wish creation
+        /// </summary>
+        /// <param name="request">Request of creation</param>
+        /// <returns>Success message</returns>
         [Authorize]
         [HttpPost("wishCreateSubmit")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SubmitCreate(WishCreationRequest request)
         {
-            // Validate the StartDate and EndDate
+            //check if editedwish name is not empty
+            if (string.IsNullOrEmpty(request.Name))
+            {
+                ModelState.AddModelError("Name", "Pavadinimas negali būti tuščias");
+            }
+            if (string.IsNullOrEmpty(request.SearchKeyWords))
+            {
+                ModelState.AddModelError("SearchKeyWords", "Reikalingas bent vienas raktažodis");
+            }
+            //check if price is not negative
+            if (request.PriceLow < 0)
+            {
+                ModelState.AddModelError("PriceLow", "Kaina negali būti neigiamas skaičius");
+            }
+            if (request.PriceHigh < 0)
+            {
+                ModelState.AddModelError("PriceHigh", "Kaina negali būti neigiamas skaičius");
+            }
             if (request.PriceHigh < request.PriceLow)
             {
-                ModelState.AddModelError("PriceHigh", "Maksimali kaina turi būti aukštesnė už minimalią");
+                ModelState.AddModelError("PriceHigh", "Maksimali kaina negali būti žemesnė už minimalią");
             }
-
+            if (request.PriceLow > request.PriceHigh)
+            {
+                ModelState.AddModelError("PriceLow", "Minimali kaina negali būti aukštensė už maksimalią");
+            }
             // Get user and check if not blocked
             int userId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == "Id")!.Value);
             User user = _dataContext.Users.Find(userId)!;
-            if (user.Blocked)
-            {
-                ModelState.AddModelError("Name", "Jūs negalite kurti naujų skelbimų, nes esate užblokuotas");
-            }
 
             if (!ModelState.IsValid)
             {
@@ -77,7 +103,6 @@ namespace Skelbimu_sistema.Controllers
             }
 
             Wish wish = new Wish();
-
             wish.Name = request.Name;
             wish.SearchKeyWords = request.SearchKeyWords;
             wish.PriceLow = request.PriceLow;
@@ -208,6 +233,136 @@ namespace Skelbimu_sistema.Controllers
                 }
             }
             return false;
+        }
+
+        /// <summary>
+        /// Open wish list page
+        /// </summary>
+        /// <returns>Page of user wishes</returns>
+        [Authorize]
+        [HttpGet("WishListPage")]
+        [Route("/Wish/WishListPage")]
+        public async Task<IActionResult> WishListPage()
+        {
+            int userId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == "Id")!.Value);
+            var user = await _dataContext.Users.FindAsync(userId);
+
+            var userWishes = await _dataContext.UserWishes
+                                .Where(wish => wish.UserId == userId)
+                                .ToListAsync();
+            ViewData["UserId"] = userId;
+            ViewData["UserRole"] = user.Role;
+
+            return View(userWishes);
+        }
+
+        /// <summary>
+        /// Delete user wish
+        /// </summary>
+        /// <param name="id">Wish id</param>
+        /// <returns>Success message</returns>
+        [Authorize]
+        [HttpPost]
+        [Route("/Wish/Delete/{id}")]
+        [ValidateAntiForgeryToken]
+        public IActionResult Delete(int id)
+        {
+            var wish = _dataContext.UserWishes.FirstOrDefault(w => w.Id == id);
+
+            if (wish == null)
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                _dataContext.UserWishes.Remove(wish);
+                _dataContext.SaveChanges();
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error deleting wish: " + ex.Message);
+                return StatusCode(500);
+            }
+        }
+
+        /// <summary>
+        /// Edit user wish
+        /// </summary>
+        /// <param name="id">Wish id</param>
+        /// <returns>Success message</returns>
+        [Authorize]
+        [HttpGet]
+        [Route("/Wish/Edit")]
+        public IActionResult Edit(int id)
+        {
+            // Retrieve the wish by id
+            var wish = _dataContext.UserWishes.FirstOrDefault(w => w.Id == id);
+
+            if (wish == null)
+            {
+                return NotFound();
+            }
+
+            // Pass the wish data to the edit view
+            return View(wish);
+        }
+
+        /// <summary>
+        /// Edit wish
+        /// </summary>
+        /// <param name="editedWish">Wish to edit</param>
+        /// <returns>Success message</returns>
+        [Authorize]
+        [HttpPost]
+        [Route("/Wish/Edit")]
+        [ValidateAntiForgeryToken]
+        public IActionResult Edit(Wish editedWish)
+        {
+            var wish = _dataContext.UserWishes.FirstOrDefault(w => w.Id == editedWish.Id);
+
+            if (wish == null)
+            {
+                return NotFound();
+            }
+            if (string.IsNullOrEmpty(editedWish.Name))
+            {
+                ModelState.AddModelError("Name", "Pavadinimas negali būti tuščias");
+            }
+            if (string.IsNullOrEmpty(editedWish.SearchKeyWords))
+            {
+                ModelState.AddModelError("SearchKeyWords", "Reikalingas bent vienas raktažodis");
+            }
+            //check if price is not negative
+            if (editedWish.PriceLow < 0)
+            {
+                ModelState.AddModelError("PriceLow", "Kaina negali būti neigiamas skaičius");
+            }
+            if (editedWish.PriceHigh < 0)
+            {
+                ModelState.AddModelError("PriceHigh", "Kaina negali būti neigiamas skaičius");
+            }
+            if (editedWish.PriceHigh < editedWish.PriceLow)
+            {
+                ModelState.AddModelError("PriceHigh", "Maksimali kaina negali būti žemesnė už minimalią");
+            }
+            if (editedWish.PriceLow > editedWish.PriceHigh)
+            {
+                ModelState.AddModelError("PriceLow", "Minimali kaina negali būti aukštensė už maksimalią");
+            }
+
+            wish.Name = editedWish.Name;
+            wish.SearchKeyWords = editedWish.SearchKeyWords;
+            wish.PriceLow = editedWish.PriceLow;
+            wish.PriceHigh = editedWish.PriceHigh;
+            wish.PaymentMethod = editedWish.PaymentMethod;
+            wish.Category = editedWish.Category;
+
+            // Save changes to the database
+            _dataContext.SaveChanges();
+            TempData["SuccessMessageWish"] = "Noras redaguotas sėkmingai!";
+            return RedirectToAction("WishListPage"); // Redirect to the wishlist view after editing
         }
 
     }

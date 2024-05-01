@@ -1,0 +1,60 @@
+﻿@model Skelbimu_sistema.Models.Wish
+
+@{
+    ViewData["Title"] = "Noro redagavimas";
+}
+
+<h2>Noro redagavimas</h2>
+
+<form asp-action="Edit" method="post">
+    <input type="hidden" asp-for="Id" />
+
+    <div class="form-group">
+        <label asp-for="Name" class="control-label">Pavadinimas</label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="SearchKeyWords" class="control-label">Raktažodžiai</label>
+        <textarea asp-for="SearchKeyWords" class="form-control"></textarea>
+        <span asp-validation-for="SearchKeyWords" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="PriceLow" class="control-label">Kaina nuo</label>
+        <input asp-for="PriceLow" class="form-control" />
+        <span asp-validation-for="PriceLow" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="PriceHigh" class="control-label">Kaina iki</label>
+        <input asp-for="PriceHigh" class="form-control" />
+        <span asp-validation-for="PriceHigh" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Category" class="control-label">Kategorija</label>
+        <select asp-for="Category" class="form-control">
+            @foreach (var category in Enum.GetValues(typeof(Skelbimu_sistema.Models.Category)))
+            {
+                <option value="@category">@category</option>
+            }
+        </select>
+        <span asp-validation-for="Category" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="PaymentMethod" class="control-label">Mokėjimo būdas</label>
+        <select asp-for="PaymentMethod" class="form-control">
+            @foreach (var type in Enum.GetValues(typeof(WishPaymentType)))
+            {
+                <option value="@type">@type</option>
+            }
+        </select>
+        <span asp-validation-for="PaymentMethod" class="text-danger"></span>
+    </div>
+
+
+    <button type="submit" class="btn btn-primary">Saugoti</button>
+    <a asp-controller="Wish" asp-action="WishListPage" class="btn btn-secondary">Grįžti atgal</a>
+</form>
+
