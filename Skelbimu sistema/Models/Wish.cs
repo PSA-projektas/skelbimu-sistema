@@ -28,12 +28,8 @@ namespace Skelbimu_sistema.Models
 
     public enum WishPaymentType
     {
-        All = 0,
-        Cash = 1,
-        Card = 2,
-        Transaction = 3,
-        Cash_And_Card = 4,
-        Cash_And_Transaction = 5,
-        Card_And_Transaction = 6   
+        Cash = 0,
+        Card = 1,
+        Transaction = 2
     }
 }

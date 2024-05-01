@@ -18,14 +18,12 @@
         <h1 class="display-4">Jūsų norai</h1>
     </div>
 
-    <div class="container">
-        <div class="row">
-            @foreach (var wish in Model)
+<div class="container">
+    <div class="row">
+        @foreach (var wish in Model)
+        {
+            if (wish.UserId == currentUserId)
             {
-                if (wish.UserId == currentUserId)
-                {
-                <div class="row">
-
                     <div class="col-lg-4 col-md-6 mb-4">
                         <div class="card h-100">
                             <div class="card-body">
@@ -36,18 +34,23 @@
                                 <p class="card-text">Kategorija: @wish.Category</p>
                                 <p class="card-text">Norimas mokėjimo būdas: @wish.PaymentMethod</p>
                             </div>
-                            <div class="card-footer">
-                                <button class="btn btn-danger" onclick="deleteWish('@wish.Id')">Naikinti</button>
-                                <button class="btn btn-primary" onclick="editWish('@wish.Id')">Redaguoti</button>
-                            </div>
-                        </div>
-                    </div>
 
-                </div>
-                }
+                            <div class="card-footer" style="text-align: center;">
+                                <button class="btn btn-danger mr-1" onclick="deleteWish('@wish.Id')">Naikinti</button>
+                                <button class="btn btn-primary mr-1" onclick="editWish('@wish.Id')">Redaguoti</button>
+
+                                <button class="btn btn-primary mr-1" onclick="showWishSuggestions('@wish.Id')">Peržiūrėti pasiūlymus</button>
+                           @*  <a class="btn btn-success" href="/Wish/OpenWishSuggestionsPage?id=@wish.Id" style="width: 180px; height: 38px;">
+                                    <span style="color: white;">Peržiūrėti pasiūlymus</span>
+                                </a> *@
+                            </div>            
+                        </div>
+                    </div>         
             }
-        </div>
+        }
     </div>
+</div>
+
 
  <script>
     function deleteWish(wishId) {
@@ -70,9 +73,11 @@
     }
 
     function editWish(wishId) {
-        // Implement edit functionality here
-
         window.location.href = '/Wish/Edit?id=' + wishId;
+    }
+
+    function showWishSuggestions(wishId) {
+        window.location.href = '/Wish/OpenWishSuggestionsPage?id=' + wishId;
     }
 
     // Function to display success message to user
