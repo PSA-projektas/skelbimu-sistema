@@ -91,20 +91,36 @@
                 </div>
             </div>
         </nav>
+        @if (!string.IsNullOrEmpty(authCookie))
+        {
+            <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                <div class="container">
+                    <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                        <ul class="navbar-nav">
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Wish" asp-action="OpenSuggestedProductsPage">
+                                    <i class="bi bi-film"></i> Siūlomi skelbimai
+                                </a>
+                            </li>
 
-        <nav class="navbar navbar-expand-lg navbar-light bg-light">
-            <div class="container">
-                <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-                    <ul class="navbar-nav">
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Wish" asp-action="OpenSuggestedProductsPage">
-                                <i class="bi bi-film"></i> Siūlomi skelbimai
-                            </a>
-                        </li>
-                    </ul>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-controller="Wish" asp-action="Create">
+                                    <i class></i>&#128228; Sukurti norą
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-controller="Wish" asp-action="WishListPage">
+                                    <i class></i>&#128228; Norų sąrašas
+                                </a>
+                            </li>
+
+                        
+                        </ul>
+                    </div>
                 </div>
-            </div>
-        </nav>
+            </nav>
+        }
 
         @{
             Dictionary<Category, string> categoryTranslations = new Dictionary<Category, string>

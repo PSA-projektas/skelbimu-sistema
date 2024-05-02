@@ -27,7 +27,7 @@ namespace Skelbimu_sistema.ViewModels
         [DataType(DataType.Date)]
         public DateTime EndDate { get; set; }
 
-        [Required(ErrorMessage = "Kategorija privalomaa")]
+        [Required(ErrorMessage = "Kategorija privaloma")]
         public Category Category { get; set; }
 
     }
