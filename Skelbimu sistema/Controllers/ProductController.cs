@@ -28,9 +28,14 @@ namespace Skelbimu_sistema.Controllers
 
         [Authorize]
         [HttpGet("kurimas")]
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
             ProductCreationRequest request = new ProductCreationRequest();
+
+            int userId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == "Id")!.Value);
+            var user = await _dataContext.Users.FindAsync(userId);
+
+            ViewData["UserRole"] = user.Role;
 
             return View(request);
         }
@@ -61,7 +66,6 @@ namespace Skelbimu_sistema.Controllers
             
             Product product = new Product();
 
-           
             product.Name = request.Name;
             product.Description = request.Description;
             product.Price = request.Price;
@@ -80,8 +84,6 @@ namespace Skelbimu_sistema.Controllers
 
             return RedirectToAction("Index", "Home");
         }
-
-
 
         [Route("product/details")]
         public IActionResult Details(int id)
@@ -102,11 +104,13 @@ namespace Skelbimu_sistema.Controllers
         public async Task<IActionResult> ViewInventory()
         {
             int userId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == "Id")!.Value);
+            var user = await _dataContext.Users.FindAsync(userId);
 
             var userInventory = await _dataContext.Products
                                 .Where(product => product.UserId == userId)
                                 .ToListAsync();
             ViewData["UserId"] = userId;
+            ViewData["UserRole"] = user.Role;
 
             return View(userInventory);
         }
@@ -116,31 +120,28 @@ namespace Skelbimu_sistema.Controllers
         [Route("Product/ChangeState")]
         public IActionResult ChangeState(int productId)
         {
-            // Retrieve the product by id
             var product = _dataContext.Products.FirstOrDefault(p => p.Id == productId);
 
             if (product == null)
             {
-                return NotFound(); // Product not found
+                return NotFound(); 
             }
 
-            // Toggle the state of the product between 0 and 1
             product.State = (product.State == ProductState.Active) ? ProductState.Reserved : ProductState.Active;
-            // Save changes to the database
+
             _dataContext.SaveChanges();
 
             return RedirectToAction("ViewInventory");
         }
+
         [Authorize]
         [HttpPost]
         [Route("Product/Delete/{id}")]
         [ValidateAntiForgeryToken]
         public IActionResult Delete(int id)
         {
-
             var product = _dataContext.Products.FirstOrDefault(p => p.Id == id);
 
-            // Check if the product exists
             if (product == null)
             {
                 return NotFound();
@@ -158,8 +159,6 @@ namespace Skelbimu_sistema.Controllers
                 return StatusCode(500); 
             }
         }
-
-
 
         [Authorize]
         [HttpGet]

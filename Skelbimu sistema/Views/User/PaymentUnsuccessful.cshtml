@@ -1,0 +1,22 @@
+﻿@{
+    ViewData["Title"] = "Apmokėjimas nepavyko";
+}
+
+<!DOCTYPE html>
+<html class="text-center">
+<head>
+    <title>@ViewData["Title"]</title>
+</head>
+<body>
+    <h1 style="color: red;">Apmokėjimas nepavyko!</h1>
+    <p>Deja, jūsų apmokėjimas nepavyko. Prašome bandyti dar kartą arba susisiekti su klientų aptarnavimo skyriumi.</p>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <form id="backForm" method="get" action="@Url.Action("Index", "Home")">
+                <button type="submit" class="btn btn-secondary mt-3">Sugrįžti atgal</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

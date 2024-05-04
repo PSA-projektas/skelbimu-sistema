@@ -1,0 +1,83 @@
+﻿@model List<Wish> // Update model to receive product list and userId
+
+@{
+    ViewData["Title"] = "Wish list";
+    int currentUserId = (int)ViewData["UserId"];
+}
+
+@if (TempData["SuccessMessageWishList"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["SuccessMessageWishList"]
+    </div>
+}
+
+<div class="text-center">
+    <h1 class="display-4">Jūsų norai</h1>
+</div>
+
+<div class="container">
+    <div class="row">
+        @foreach (var wish in Model)
+        {
+            if (wish.UserId == currentUserId)
+            {
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h4 class="card-title">Pavadinimas: @wish.Name</h4>
+                                <p class="card-text">Raktažodžiai: @wish.SearchKeyWords</p>
+                                <p class="card-text">Kaina nuo: $@wish.PriceLow</p>
+                                <p class="card-text">Kaina iki: $@wish.PriceHigh</p>
+                                <p class="card-text">Kategorija: @wish.Category</p>
+                                <p class="card-text">Norimas mokėjimo būdas: @wish.PaymentMethod</p>
+                            </div>
+
+                            <div class="card-footer" style="text-align: center;">
+                                <button class="btn btn-danger mr-1" onclick="deleteWish('@wish.Id')">Naikinti</button>
+                                <button class="btn btn-primary mr-1" onclick="editWish('@wish.Id')">Redaguoti</button>
+                                <button class="btn btn-primary mr-1" onclick="showWishSuggestions('@wish.Id')">Peržiūrėti pasiūlymus</button>
+                            </div>            
+                        </div>
+                    </div>         
+            }
+        }
+    </div>
+</div>
+
+
+ <script>
+    function deleteWish(wishId) {
+        if (confirm('Ar tikrai norite ištrinti šį norą?')) {
+            var token = $('input[name="__RequestVerificationToken"]').val(); // Get anti-forgery token
+            $.ajax({
+                url: '/Wish/Delete/' + wishId, // Update the URL to match the correct route
+                type: 'POST',
+                data: { id: wishId, __RequestVerificationToken: token }, // Pass the anti-forgery token
+                success: function (response) {
+                    displaySuccessMessage('Noras sėkmingai ištrintas!');
+                    location.reload();
+                },
+                error: function (xhr, status, error) {
+                    console.error('Klaida trinant norą:', error);
+                    displaySuccessMessage('Noras neištrintas!');
+                }
+            });
+        }
+    }
+
+    function editWish(wishId) {
+        window.location.href = '/Wish/Edit?id=' + wishId;
+    }
+
+    function showWishSuggestions(wishId) {
+        window.location.href = '/Wish/OpenWishSuggestionsPage?id=' + wishId;
+    }
+
+    // Function to display success message to user
+    function displaySuccessMessage(message) {
+        alert(message); 
+    }
+
+</script> 
+

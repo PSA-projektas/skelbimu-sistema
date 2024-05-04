@@ -1,25 +1,14 @@
-﻿@model Skelbimu_sistema.ViewModels.ProductCreationRequest
+﻿@model Skelbimu_sistema.ViewModels.WishCreationRequest
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Skelbimo kūrimo langas</title>
+    <title>Noro kūrimo langas</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 
-@if ((int)ViewData["UserRole"] == 1)
-{
-    <div class="text-center">
-        <p>Norint kurti skelbimus turite turėti pardavėjo statusą, kurį galite įsigyti už 5$.</p>
-        <form method="post" asp-controller="User" asp-action="PayUsingPaypal">
-            <button type="submit" class="btn btn-success">Pirkti pardavėjo statusą su Paypal</button>
-        </form>
-    </div>
-}
-else
-{
     <body>
         <div class="container">
-            <h2 class="text-center">Skelbimo kūrimas</h2>
+            <h2 class="text-center">Noro kūrimas</h2>
 
             <div class="row justify-content-center">
                 <div class="col-md-8">
@@ -27,7 +16,7 @@ else
                         <hr />
                         @Html.ValidationSummary(true, "", new { @class = "text-danger" })
 
-                        <!-- Product fields -->
+                        <!-- Wish fields -->
                         <div class="form-group row">
                             <label asp-for="Name" class="control-label col-md-2">Pavadinimas:</label>
                             <div class="col-md-10">
@@ -35,47 +24,27 @@ else
                                 <span asp-validation-for="Name" class="text-danger"></span>
                             </div>
                         </div>
-
                         <div class="form-group row">
-                            <label asp-for="Description" class="control-label col-md-2">Aprašymas:</label>
+                            <label asp-for="SearchKeyWords" class="control-label col-md-2">Raktažodžiai:</label>
                             <div class="col-md-10">
-                                <input asp-for="Description" class="form-control" />
-                                <span asp-validation-for="Description" class="text-danger"></span>
+                                <input asp-for="SearchKeyWords" class="form-control" />
+                                <span asp-validation-for="SearchKeyWords" class="text-danger"></span>
                             </div>
                         </div>
-
                         <div class="form-group row">
-                            <label asp-for="Price" class="control-label col-md-2">Kaina:</label>
+                            <label asp-for="PriceLow" class="control-label col-md-2">Kaina nuo:</label>
                             <div class="col-md-10">
-                                <input asp-for="Price" class="form-control" />
-                                <span asp-validation-for="Price" class="text-danger"></span>
+                            <input asp-for="PriceLow" class="form-control" />
+                            <span asp-validation-for="PriceLow" class="text-danger"></span>
                             </div>
                         </div>
-
                         <div class="form-group row">
-                            <label asp-for="ImageUrl" class="control-label col-md-2">Nuotraukos URL:</label>
+                            <label asp-for="PriceHigh" class="control-label col-md-2">Kaina iki:</label>
                             <div class="col-md-10">
-                                <input asp-for="ImageUrl" class="form-control" />
-                                <span asp-validation-for="ImageUrl" class="text-danger"></span>
+                                <input asp-for="PriceHigh" class="form-control" />
+                                <span asp-validation-for="PriceHigh" class="text-danger"></span>
                             </div>
                         </div>
-
-                        <div class="form-group row">
-                            <label asp-for="StartDate" class="control-label col-md-2">Pradžios data:</label>
-                            <div class="col-md-10">
-                                <input asp-for="StartDate" class="form-control" type="date" min="@DateTime.Now.ToString("yyyy-MM-dd")" />
-                                <span asp-validation-for="StartDate" class="text-danger"></span>
-                            </div>
-                        </div>
-
-                        <div class="form-group row">
-                            <label asp-for="EndDate" class="control-label col-md-2">Pabaigos data:</label>
-                            <div class="col-md-10">
-                                <input asp-for="EndDate" class="form-control" type="date" min="@DateTime.Now.ToString("yyyy-MM-dd")" />
-                                <span asp-validation-for="EndDate" class="text-danger"></span>
-                            </div>
-                        </div>
-
                         <div class="form-group row">
                             <label asp-for="Category" class="control-label col-md-2">Kategorija:</label>
                             <div class="col-md-10">
@@ -89,6 +58,18 @@ else
                                 <span asp-validation-for="Category" class="text-danger"></span>
                             </div>
                         </div>
+                    <div class="form-group row">
+                        <label asp-for="PaymentType" class="control-label col-md-2">Norimas mokėjimo būdas:</label>
+                        <div class="col-md-10">
+                            <select asp-for="PaymentType" class="form-control">
+                                @foreach (var type in Html.GetEnumSelectList<WishPaymentType>())
+                                {
+                                    <option value="@type.Value">@type.Text</option>
+                                }
+                            </select>
+                            <span asp-validation-for="PaymentType" class="text-danger"></span>
+                        </div>
+                    </div>
 
                         <div class="row justify-content-center">
                             <div class="col-md-12 text-center">
@@ -109,6 +90,5 @@ else
         </div>
 
     </body>
-}
 
 </html>

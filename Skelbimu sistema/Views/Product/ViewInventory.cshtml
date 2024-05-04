@@ -4,6 +4,7 @@
     ViewData["Title"] = "Inventory";
     int currentUserId = (int)ViewData["UserId"];
 
+
 }
 
 @if (TempData["SuccessMessageInventory"] != null)
@@ -13,42 +14,54 @@
     </div>
 }
 
-<div class="text-center">
-    <h1 class="display-4">Jūsų inventorius</h1>
-</div>
-
-
-
-<div class="container">
-    <div class="row">
-        @foreach (var product in Model)
-        {
-            // Check if the product was uploaded by the current user
-            if (product.UserId == currentUserId)
-            {
-                <div class="col-lg-4 col-md-6 mb-4">
-                    <div class="card h-100">
-                        <img class="card-img-top" src="@product.ImageUrl" alt="@product.Name">
-                        <div class="card-body">
-                            <h4 class="card-title">@product.Name</h4>
-                            <p class="card-text">@product.Description</p>
-                            <p class="card-text">Kaina: $@product.Price</p>
-                            <p class="card-text">Kategorija: @product.Category</p>
-                            <p class="card-text">Būsena: @(product.State == ProductState.Active ? "Aktyvus" : "Rezervuotas")</p>
-
-                        </div>
-                        <div class="card-footer">
-                            <button class="btn btn-danger" onclick="deleteProduct('@product.Id')">Naikinti</button>
-                            <button class="btn btn-primary" onclick="editProduct('@product.Id')">Redaguoti</button>
-                            <button class="btn btn-info" onclick="changeProductState('@product.Id')">Keisti būseną</button>
-                        </div>
-
-                    </div>
-                </div>
-            }
-        }
+@if ((int)ViewData["UserRole"] == 1) // Checking if User Role is not equal to 2 (Seller)
+{
+    <div class="text-center">
+        <p>Norint peržiūrėti jūsų įtalpintus skelbimus turite turėti pardavėjo statusą, kurį galite įsigyti už 5$.</p>
+        <form method="post" asp-controller="User" asp-action="PayUsingPaypal">
+            <button type="submit" class="btn btn-success">Pirkti pardavėjo statusą su Paypal</button>
+        </form>
     </div>
-</div>
+
+}
+else
+{
+    <div class="text-center">
+        <h1 class="display-4">Jūsų inventorius</h1>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            @foreach (var product in Model)
+            {
+                // Check if the product was uploaded by the current user
+                if (product.UserId == currentUserId)
+                {
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="card h-100">
+                            <img class="card-img-top" src="@product.ImageUrl" alt="@product.Name">
+                            <div class="card-body">
+                                <h4 class="card-title">@product.Name</h4>
+                                <p class="card-text">@product.Description</p>
+                                <p class="card-text">Kaina: $@product.Price</p>
+                                <p class="card-text">Kategorija: @product.Category</p>
+                                <p class="card-text">Būsena: @(product.State == ProductState.Active ? "Aktyvus" : "Rezervuotas")</p>
+
+                            </div>
+                            <div class="card-footer">
+                                <button class="btn btn-danger" onclick="deleteProduct('@product.Id')">Naikinti</button>
+                                <button class="btn btn-primary" onclick="editProduct('@product.Id')">Redaguoti</button>
+                                <button class="btn btn-info" onclick="changeProductState('@product.Id')">Keisti būseną</button>
+                            </div>
+
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+}
+
 
 <script>
 
