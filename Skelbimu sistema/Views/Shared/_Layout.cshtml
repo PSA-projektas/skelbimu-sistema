@@ -12,7 +12,13 @@
 
 <body>
     @{
-        var authCookie = Context.Request.Cookies["AuthToken"];
+        string? authToken = Context.Request.Cookies["AuthToken"];
+        string? role = null;
+        if (authToken != null)
+        {
+            role = Context.Request.Cookies["Role"];
+        }
+        
     }
     <header>
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -46,13 +52,7 @@
                             </div>
                         </form>                    
 
-                        <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Admin" asp-action="Index">
-                                <i class="bi bi-wrench"></i> Administracija
-                            </a>
-                        </li>
-
-                        @if (string.IsNullOrEmpty(authCookie))
+                        @if (string.IsNullOrEmpty(authToken))
                         {
                             <li class="nav-item">
                                 <a class="nav-link" asp-area="" asp-controller="User" asp-action="Login">
@@ -86,12 +86,21 @@
                                     <i class></i>&#128221; Inventorius
                                 </a>
                             </li>
+
+                            if(role != null && role == "Admin")
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-area="" asp-controller="Admin" asp-action="Index">
+                                        <i class="bi bi-wrench"></i> Administracija
+                                    </a>
+                                </li>
+                            }
                         }
                     </ul>
                 </div>
             </div>
         </nav>
-        @if (!string.IsNullOrEmpty(authCookie))
+        @if (!string.IsNullOrEmpty(authToken))
         {
             <nav class="navbar navbar-expand-lg navbar-light bg-light">
                 <div class="container">

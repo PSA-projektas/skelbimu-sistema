@@ -1,21 +1,16 @@
-﻿using Azure.Core;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using MimeKit;
 using MimeKit.Text;
-using Newtonsoft.Json;
-using Skelbimu_sistema.Models;
 using Skelbimu_sistema.ViewModels;
 using Skelbimu_sistema.Services;
 using System.IdentityModel.Tokens.Jwt;
-using MailKit.Net.Smtp;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using Microsoft.EntityFrameworkCore;
 using MailKit.Security;
+using MailKit.Net.Smtp;
 
 namespace Skelbimu_sistema.Controllers
 {
@@ -25,7 +20,7 @@ namespace Skelbimu_sistema.Controllers
 	{
 		private readonly DataContext _dataContext;
 		private readonly IUnitOfWork _unitOfWork;
-		private readonly ILogger _logger;
+        private readonly Microsoft.Extensions.Logging.ILogger _logger;
         private const string TokenSecretKey = "SKELBIMUSISTEMASECRETTOKENKEY12345";
 		private static readonly TimeSpan TokenLifetime = TimeSpan.FromHours(1);
 
@@ -71,41 +66,61 @@ namespace Skelbimu_sistema.Controllers
 			};
 
 			_dataContext.Users.Add(user);
-			await _dataContext.SaveChangesAsync();
+            await _dataContext.SaveChangesAsync();
+            return SendVerification(user.Email, user.VerificationToken);
+        }
 
-			return RedirectToAction("Index", "Home"); // TODO: pass a success message
-		}
-
-		public IActionResult SendVerification(string token)
+		[HttpGet("patvirtinti")]
+		public IActionResult SendVerification(string emailAddress, string token)
 		{
 			var email = new MimeMessage();
-			email.From.Add(MailboxAddress.Parse("dorothy19@ethereal.email"));
-			email.To.Add(MailboxAddress.Parse("dorothy19@ethereal.email"));
+			email.From.Add(MailboxAddress.Parse("sistemaskelbimu@gmail.com"));
+			email.To.Add(MailboxAddress.Parse(emailAddress));
 			email.Subject = "Registracijos patvirtinimas";
-			email.Body = new TextPart(TextFormat.Html) { Text = token };
+            // Construct the HTML body with a form and a button
+            var htmlBody = $@"
+				<html>
+				<head></head>
+				<body>
+					<p>Paspauskite žemiau esantį mygtuką, kad patvirtintumėte registraciją:</p>
+					<form action='http://localhost:5224/naudotojai/patvirtinti' method='post'>
+						<input type='hidden' name='token' value='{token}' />
+						<button type='submit'>Patvirtinti</button>
+					</form>
+				</body>
+				</html>";
 
-			using var smtp = new SmtpClient();
-			smtp.Connect("smtp.ethereal.email", 587, SecureSocketOptions.StartTls); // TODO: maybe use gmail or office?
-			smtp.Authenticate("dorothy19@ethereal.email", "pB67aCYMenZaWj39Y7");
-			smtp.Send(email);
-			smtp.Disconnect(true);
+            email.Body = new TextPart(TextFormat.Html) { Text = htmlBody };
 
-			return RedirectToAction("User", "Login");
-		}
+            using (var smtp = new SmtpClient())
+            {
+                smtp.ServerCertificateValidationCallback = (s, c, h, e) => true;
+                smtp.Connect("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
+                smtp.Authenticate("sistemaskelbimu@gmail.com", "tpdo rnzp fxgj muyf");
+                smtp.Send(email);
+                smtp.Disconnect(true);
+            }
 
-		[HttpPost("patvirtinti")]
-		public async Task<IActionResult> Verify(string token)
+			return RedirectToAction("Index", "Home");
+        }
+
+        [HttpPost("patvirtinti")]
+        public async Task<IActionResult> Verify(string token)
 		{
 			var user = await _dataContext.Users.FirstOrDefaultAsync(u => u.VerificationToken == token);
 			if(user == null)
 			{
-				return BadRequest("Netinkamas tokenas");
-			}
+                return RedirectToAction("Login", "User");
+            }
 
-			user.VerificationDate = DateTime.Now;
+			if (user.VerificationDate == null)
+			{
+                user.VerificationDate = DateTime.Now;
+            }
+            
 			await _dataContext.SaveChangesAsync();
 
-			return Login();
+			return RedirectToAction("Login", "User");
 		}
 
 		[HttpGet("prisijungimas")]
@@ -135,12 +150,11 @@ namespace Skelbimu_sistema.Controllers
 				return View("Login", request);
 			}
 
-			// TODO: implement email verification
-			//if (user.VerificationDate == null)
-			//{
-			//	ModelState.AddModelError("Email", "Naudotojas nėra patvirtintas");
-			//	return View("Login", request);
-			//}
+			if (user.VerificationDate == null)
+			{
+				ModelState.AddModelError("Email", "Naudotojas nėra patvirtintas");
+				return View("Login", request);
+			}
 
 			if (!VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt))
 			{
@@ -158,18 +172,7 @@ namespace Skelbimu_sistema.Controllers
                 Secure = true
             };
             Response.Cookies.Append("AuthToken", jwt, cookieOptions);
-
-            // Create a cookie with user's information
-            //var userInfo = new { Id = user.Id, Email = user.Email, FirstName = user.FirstName, LastName = user.LastName, PhoneNumber = user.PhoneNumber };
-            //var userCookieValue = JsonConvert.SerializeObject(userInfo);
-            //var cookieOptions = new CookieOptions
-            //{
-            //	Expires = DateTime.UtcNow.AddHours(2), // Set cookie expiration date
-            //	HttpOnly = true // Ensure the cookie is only accessible via HTTP(S)
-            //};
-
-            //// Add it to storage
-            //HttpContext.Response.Cookies.Append("User", userCookieValue, cookieOptions);
+            Response.Cookies.Append("Role", user.Role.ToString(), cookieOptions);
 
             return RedirectToAction("Index", "Home"); // TODO: pass a success message
 		}
@@ -179,13 +182,9 @@ namespace Skelbimu_sistema.Controllers
 		{
             // Remove the user auth token cookie
             HttpContext.Response.Cookies.Delete("AuthToken");
+            HttpContext.Response.Cookies.Delete("Role");
 
             return RedirectToAction("Index", "Home"); // TODO: pass a success message
-		}
-
-		public IActionResult Index()
-		{
-			return View();
 		}
 
         [HttpGet("naudotojai/{userId}")]
