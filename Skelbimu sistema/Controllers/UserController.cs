@@ -11,6 +11,7 @@ using System.Security.Cryptography;
 using System.Text;
 using MailKit.Security;
 using MailKit.Net.Smtp;
+using NuGet.Common;
 
 namespace Skelbimu_sistema.Controllers
 {
@@ -187,7 +188,107 @@ namespace Skelbimu_sistema.Controllers
             return RedirectToAction("Index", "Home"); // TODO: pass a success message
 		}
 
-        [HttpGet("naudotojai/{userId}")]
+		[HttpGet("priminti-slaptazodi")]
+		public IActionResult ForgotPassword()
+		{
+			return View(new ForgotPasswordRequest());
+		}
+
+		[HttpPost("priminti-slaptazodi")]
+		public async Task<IActionResult> SubmitForgotPasswordAsync(ForgotPasswordRequest request)
+		{
+			if (!ModelState.IsValid)
+			{
+				return View("ForgotPassword", request);
+			}
+
+			var user = await _dataContext.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+
+			if (user == null)
+			{
+				ModelState.AddModelError("Email", "Naudotojas nerastas");
+				return View("ForgotPassword", request);
+			}
+
+			user.PasswordResetToken = CreateRandomToken();
+			user.ResetTokenExpirationDate = DateTime.Now.AddDays(1);
+			await _dataContext.SaveChangesAsync();
+
+			SendPasswordReset(user.Email, user.PasswordResetToken);
+
+			return RedirectToAction("Login", "User");
+		}
+
+		private void SendPasswordReset(string emailAddress, string token)
+		{
+			var email = new MimeMessage();
+			email.From.Add(MailboxAddress.Parse("sistemaskelbimu@gmail.com"));
+			email.To.Add(MailboxAddress.Parse(emailAddress));
+			email.Subject = "Slaptažodžio keitimas";
+			// Construct the HTML body with a form and a button
+			var htmlBody = $@"
+				<html>
+				<head></head>
+				<body>
+					<p>Paspauskite žemiau esantį mygtuką, kad patvirtintumėte slaptažodžio keitimą:</p>
+					<a href='http://localhost:5224/naudotojai/keisti-slaptazodi?token={token}'>Patvirtinti</a>
+				</body>
+				</html>";
+
+			email.Body = new TextPart(TextFormat.Html) { Text = htmlBody };
+
+			using (var smtp = new SmtpClient())
+			{
+				smtp.ServerCertificateValidationCallback = (s, c, h, e) => true;
+				smtp.Connect("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
+				smtp.Authenticate("sistemaskelbimu@gmail.com", "tpdo rnzp fxgj muyf");
+				smtp.Send(email);
+				smtp.Disconnect(true);
+			}
+		}
+
+		[HttpGet("keisti-slaptazodi")]
+		public IActionResult ResetPassword(string token)
+		{
+			return View(new ResetPasswordRequest() { Token = token });
+		}
+
+		[HttpPost("keisti-slaptazodi")]
+		public async Task<IActionResult> SubmitResetPasswordAsync(string token, ResetPasswordRequest request)
+		{
+			if (!ModelState.IsValid)
+			{
+				return View("ResetPassword", request);
+			}
+
+			var user = await _dataContext.Users.FirstOrDefaultAsync(u => u.PasswordResetToken == token);
+
+			if (user == null)
+			{
+				ModelState.AddModelError("Password", "Slaptažodžio keitimas negalimas");
+				return View("ResetPassword", request);
+			}
+
+			if (user.ResetTokenExpirationDate < DateTime.Now)
+			{
+				ModelState.AddModelError("Password", "Slaptažodžio keitimas nebegalioja");
+				return View("ResetPassword", request);
+			}
+
+			user.PasswordResetToken = CreateRandomToken();
+
+			CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
+
+			user.PasswordHash = passwordHash;
+			user.PasswordSalt = passwordSalt;
+			user.PasswordResetToken = null;
+			user.ResetTokenExpirationDate = null;
+			await _dataContext.SaveChangesAsync();
+
+			return RedirectToAction("Login", "User");
+		}
+
+		[HttpGet("naudotojai/{userId}")]
         public IActionResult Details(int userId)
 		{
 			//// Retrieve user details based on the id parameter
