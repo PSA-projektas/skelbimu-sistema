@@ -50,7 +50,7 @@ namespace Skelbimu_sistema.Controllers
         {
             WishCreationRequest request = new WishCreationRequest();
 
-            int userId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == "Id")!.Value);
+            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             var user = await _dataContext.Users.FindAsync(userId);
 
             ViewData["UserRole"] = user.Role;
@@ -95,7 +95,7 @@ namespace Skelbimu_sistema.Controllers
                 ModelState.AddModelError("PriceLow", "Minimali kaina negali būti aukštensė už maksimalią");
             }
             // Get user and check if not blocked
-            int userId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == "Id")!.Value);
+            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             User user = _dataContext.Users.Find(userId)!;
 
             if (!ModelState.IsValid)
@@ -244,7 +244,7 @@ namespace Skelbimu_sistema.Controllers
         [Route("/Wish/WishListPage")]
         public async Task<IActionResult> WishListPage()
         {
-            int userId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == "Id")!.Value);
+            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             var user = await _dataContext.Users.FindAsync(userId);
 
             var userWishes = await _dataContext.UserWishes

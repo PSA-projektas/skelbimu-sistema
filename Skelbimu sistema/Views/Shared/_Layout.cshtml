@@ -1,4 +1,7 @@
-﻿<!DOCTYPE html>
+﻿@using System.Security.Claims
+@inject IHttpContextAccessor HttpContextAccessor
+
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -12,11 +15,16 @@
 
 <body>
     @{
-        string? authToken = Context.Request.Cookies["AuthToken"];
-        string? role = null;
-        if (authToken != null)
+        // Retrieve the logged in user's information
+        string? userId = null;
+        string? userEmail = null;
+        string? userRole = null;
+        ClaimsPrincipal? user = HttpContextAccessor.HttpContext?.User;
+        if (user?.Identity?.IsAuthenticated ?? false)
         {
-            role = Context.Request.Cookies["Role"];
+            userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            userEmail = user.FindFirstValue(ClaimTypes.Email);
+            userRole = user.FindFirstValue(ClaimTypes.Role);
         }
         
     }
@@ -30,15 +38,6 @@
                 </button>
                 <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                     <ul class="navbar-nav">
-                        
-                        <li class="nav-item">
-                            @* <a class="nav-link" asp-area="" asp-controller="Products" asp-action="List"> *@
-                                @*Laikina nuoroda i main ekrana*@
-                            <a class="nav-link" asp-controller="Home" asp-action="Index"> 
-                                <i class="bi bi-film"></i> Skelbimai
-                            </a>
-                        </li>
-
                         @* <form id="searchForm" class="form-inline my-2 my-lg-0" asp-controller="Search" asp-action="Index" method="get"> *@
                         <form id="searchForm" class="form-inline my-2 my-lg-0" asp-controller="Product" asp-action="Filter" method="get">
                             <div class="input-group">
@@ -52,7 +51,40 @@
                             </div>
                         </form>                    
 
-                        @if (string.IsNullOrEmpty(authToken))
+                        @if (User.Identity?.IsAuthenticated ?? false)
+                        {
+                            
+
+                            <li class="nav-item">
+                                <form method="post" asp-controller="User" asp-action="SubmitLogout">
+                                    <button type="submit" class="nav-link" style="border: none; background-color: transparent;">
+                                        <i class="bi bi-person-x"></i> Atsijungti
+                                    </button>
+                                </form>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-controller="Product" asp-action="Create">
+                                    <i></i>&#128228; Sukurti skelbimą
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-controller="Product" asp-action="ViewInventory">
+                                    <i></i>&#128221; Inventorius
+                                </a>
+                            </li>
+
+                            if (User.IsInRole("Admin"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-area="" asp-controller="Admin" asp-action="Index">
+                                        <i class="bi bi-wrench"></i> Administracija
+                                    </a>
+                                </li>
+                            }
+                        }
+                        else
                         {
                             <li class="nav-item">
                                 <a class="nav-link" asp-area="" asp-controller="User" asp-action="Login">
@@ -65,42 +97,11 @@
                                 </a>
                             </li>
                         }
-                        else
-                        {
-                            <li class="nav-item">
-                                    <form method="post" asp-controller="User" asp-action="SubmitLogout">
-                                    <button type="submit" class="nav-link" style="border: none; background-color: transparent;">
-                                        <i class="bi bi-person-x"></i> Atsijungti
-                                    </button>
-                                </form>
-                            </li>
-
-                            <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-controller="Product" asp-action="Create">
-                                    <i class></i>&#128228; Sukurti skelbimą
-                                </a>
-                            </li>
-
-                            <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-controller="Product" asp-action="ViewInventory">
-                                    <i class></i>&#128221; Inventorius
-                                </a>
-                            </li>
-
-                            if(role != null && role == "Admin")
-                            {
-                                <li class="nav-item">
-                                    <a class="nav-link" asp-area="" asp-controller="Admin" asp-action="Index">
-                                        <i class="bi bi-wrench"></i> Administracija
-                                    </a>
-                                </li>
-                            }
-                        }
                     </ul>
                 </div>
             </div>
         </nav>
-        @if (!string.IsNullOrEmpty(authToken))
+        @if (User.Identity?.IsAuthenticated ?? false)
         {
             <nav class="navbar navbar-expand-lg navbar-light bg-light">
                 <div class="container">
@@ -114,13 +115,13 @@
 
                             <li class="nav-item">
                                 <a class="nav-link" asp-area="" asp-controller="Wish" asp-action="Create">
-                                    <i class></i>&#128228; Sukurti norą
+                                    <i></i>&#128228; Sukurti norą
                                 </a>
                             </li>
 
                             <li class="nav-item">
                                 <a class="nav-link" asp-area="" asp-controller="Wish" asp-action="WishListPage">
-                                    <i class></i>&#128228; Norų sąrašas
+                                    <i></i>&#128228; Norų sąrašas
                                 </a>
                             </li>
 
@@ -166,6 +167,9 @@
 
     <div class="container-fluid">
         <main role="main" class="pb-3">
+            <div class="alert alert-success" id="successAlert" role="alert" style="display:none; position: fixed; top: 1rem; right: 1rem; z-index: 1050;"></div>
+            <div class="alert alert-danger" id="errorAlert" role="alert" style="display:none; position: fixed; top: 1rem; right: 1rem; z-index: 1050;"></div>
+
             @RenderBody()
         </main>
     </div>
@@ -180,6 +184,31 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script>
+        $(document).ready(function () {
+            function showNotification(message, isSuccess) {
+                var alertType = isSuccess ? $('#successAlert') : $('#errorAlert');
+                alertType.text(message).slideDown();
+
+                setTimeout(function () {
+                    alertType.slideUp();
+                }, 5000);
+            }
+
+            var successMessage = '@Html.Raw(TempData["SuccessMessage"] ?? "")';
+            var errorMessage = '@Html.Raw(TempData["ErrorMessage"] ?? "")';
+
+            if (successMessage) {
+                showNotification(successMessage, true);
+            }
+            if (errorMessage) {
+                showNotification(errorMessage, false);
+            }
+        });
+    </script>
+
+
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>

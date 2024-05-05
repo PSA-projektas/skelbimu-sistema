@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using Skelbimu_sistema.Models;
+using System.Security.Claims;
 
 namespace Skelbimu_sistema.Controllers
 {
@@ -134,17 +135,25 @@ namespace Skelbimu_sistema.Controllers
 		[HttpPost("perspeti")]
 		public async Task<IActionResult> SubmitReport(Report report)
 		{
-            // TODO: check if current user hasn't already reported this product
-            int userId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == "Id")!.Value);
-            var user = await _dataContext.Users.FindAsync(userId);            
+            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var user = await _dataContext.Users.FindAsync(userId);                        
 
             report.UserId = userId;
             report.User = user!;
 
             int productId = report.ProductId;
-            var product = await _dataContext.Products.FindAsync(productId); // the view doesn't return the product
+            var product = await _dataContext.Products.Include(p => p.User).FirstOrDefaultAsync(p => p.Id == productId); // the view doesn't return the product
 
             report.Product = product!;
+
+            // Prevent user from reporting the same product multiple times
+            var existingReport = await _dataContext.Reports.FirstOrDefaultAsync(r => r.UserId == userId && r.ProductId == report.ProductId);
+            if (existingReport != null)
+            {
+                TempData["ErrorMessage"] = "Perspėjimo sukurti nepavyko";
+                ModelState.AddModelError("Reason", "Perspėjimas jau egzistuoja");
+                return View("Report", report);
+            }
 
             _dataContext.Reports.Add(report);
             await _dataContext.SaveChangesAsync();
@@ -156,7 +165,8 @@ namespace Skelbimu_sistema.Controllers
                 await AutomaticallySuspend(product);
             }
 
-			return RedirectToAction("Index", "Home"); // TODO: pass a success message
+            TempData["SuccessMessage"] = "Skelbimas sėkmingai perspėtas";
+			return RedirectToAction("Index", "Home");
 		}
 
         [Authorize(Policy = "IsAdmin")]

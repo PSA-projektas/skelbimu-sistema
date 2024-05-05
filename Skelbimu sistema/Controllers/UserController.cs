@@ -1,17 +1,15 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
 using MimeKit;
 using MimeKit.Text;
 using Skelbimu_sistema.ViewModels;
 using Skelbimu_sistema.Services;
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
-using System.Text;
 using MailKit.Security;
 using MailKit.Net.Smtp;
-using NuGet.Common;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication;
 
 namespace Skelbimu_sistema.Controllers
 {
@@ -125,9 +123,12 @@ namespace Skelbimu_sistema.Controllers
 		}
 
 		[HttpGet("prisijungimas")]
-		public IActionResult Login()
+		public IActionResult Login(string returnUrl = "")
 		{
-			UserLoginRequest request = new UserLoginRequest();
+			UserLoginRequest request = new UserLoginRequest()
+			{
+				ReturnUrl = returnUrl
+			};
 
 			return View(request);
 		}
@@ -137,55 +138,71 @@ namespace Skelbimu_sistema.Controllers
 		{
 			if (!ModelState.IsValid)
 			{
+                var errors = ModelState.Values.SelectMany(v => v.Errors)
+                                   .Select(e => e.ErrorMessage)
+                                   .ToList();
+
+                string errorMessage = string.Join("; ", errors);
+                TempData["ErrorMessage"] = errorMessage;
 				return View("Login", request);
 			}
 
 			var user = await _dataContext.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
 
-			// Generic error message used to not give away too much information
-			var errorMessage = "Prisijungti nepavyko. Patikrinkite savo pašto adresą ir slaptažodį";
-
 			if (user == null)
 			{
-				ModelState.AddModelError("Email", errorMessage);
+                TempData["ErrorMessage"] = "Prisijungimas nepavyko";
+                ModelState.AddModelError("Email", "Prisijungti nepavyko. Patikrinkite savo pašto adresą ir slaptažodį");
 				return View("Login", request);
 			}
 
 			if (user.VerificationDate == null)
 			{
-				ModelState.AddModelError("Email", "Naudotojas nėra patvirtintas");
+                TempData["ErrorMessage"] = "Prisijungimas nepavyko";
+                ModelState.AddModelError("Email", "Naudotojas nėra patvirtintas");
 				return View("Login", request);
 			}
 
 			if (!VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt))
 			{
-				ModelState.AddModelError("Email", errorMessage);
+                TempData["ErrorMessage"] = "Prisijungimas nepavyko";
+                ModelState.AddModelError("Email", "Prisijungti nepavyko. Patikrinkite savo pašto adresą ir slaptažodį");
 				return View("Login", request);
 			}
 
-			// If login is valid create a JWT token
-			var jwt = GenerateToken(user);
+			var claims = new List<Claim>
+			{
+				new Claim(ClaimTypes.Email, user.Email),
+				new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+				new Claim(ClaimTypes.Role, user.Role.ToString())
+			};
 
-            // Set the JWT in a secure HttpOnly cookie
-            var cookieOptions = new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true
-            };
-            Response.Cookies.Append("AuthToken", jwt, cookieOptions);
-            Response.Cookies.Append("Role", user.Role.ToString(), cookieOptions);
+			var claimsIdentity = new ClaimsIdentity(
+				claims, CookieAuthenticationDefaults.AuthenticationScheme);
 
-            return RedirectToAction("Index", "Home"); // TODO: pass a success message
+			await HttpContext.SignInAsync(
+				CookieAuthenticationDefaults.AuthenticationScheme,
+				new ClaimsPrincipal(claimsIdentity)
+				);
+
+			TempData["SuccessMessage"] = "Sėkmingai prisijungėte";
+			// Check if the returnUrl is local to prevent redirect attacks
+			if (Url.IsLocalUrl(request.ReturnUrl))
+			{
+				return Redirect(request.ReturnUrl);
+			}
+			else
+			{
+				return RedirectToAction("Index", "Home"); // Fallback to home page
+			}
 		}
 
 		[HttpPost("atsijungti")]
-		public IActionResult SubmitLogout()
+		public async Task<IActionResult> SubmitLogoutAsync()
 		{
-            // Remove the user auth token cookie
-            HttpContext.Response.Cookies.Delete("AuthToken");
-            HttpContext.Response.Cookies.Delete("Role");
-
-            return RedirectToAction("Index", "Home"); // TODO: pass a success message
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+			TempData["SuccessMessage"] = "Sėkmingai atsijungėte";
+            return RedirectToAction("Index", "Home");
 		}
 
 		[HttpGet("priminti-slaptazodi")]
@@ -302,6 +319,12 @@ namespace Skelbimu_sistema.Controllers
 			return View(user);
 		}
 
+		[HttpGet("uzdrausta")]
+		public IActionResult Forbidden()
+		{
+			return View();
+		}
+
 		private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
 		{
 			using (var hmac = new HMACSHA512())
@@ -325,43 +348,11 @@ namespace Skelbimu_sistema.Controllers
 			return Convert.ToHexString(RandomNumberGenerator.GetBytes(64));
 		}
 
-		private string GenerateToken(User user)
-		{
-			var tokenHandler = new JwtSecurityTokenHandler();
-			var key = Encoding.UTF8.GetBytes(TokenSecretKey);
-
-			var claims = new List<Claim>
-			{
-				new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-				new(JwtRegisteredClaimNames.Sub, user.Email),
-				new(JwtRegisteredClaimNames.Email, user.Email),
-				new("Id", user.Id.ToString(), ClaimValueTypes.Integer),
-				new("Role", user.Role.ToString(), ClaimValueTypes.String)
-			};
-
-			var tokenDescriptor = new SecurityTokenDescriptor
-			{
-				Subject = new ClaimsIdentity(claims),
-				Expires = DateTime.UtcNow.Add(TokenLifetime),
-				Issuer = "https://skelbimusistema.lt",
-				Audience = "https://skelbimusistema.lt",
-				SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256),
-            };
-			//"Issuer": "https://skelbimusistema.lt",
-			//"Audience": "https://skelbimusistema.lt"
-
-			var token = tokenHandler.CreateToken(tokenDescriptor);
-
-			var jwt = tokenHandler.WriteToken(token);
-
-			return jwt;
-        }
-
         [Authorize]
         [HttpGet("PaymentSuccessful")]
         public IActionResult PaymentSuccessful(string paymentId, string token, string PayerID)
 		{
-            int userId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == "Id")!.Value);
+            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
             try
             {
@@ -424,15 +415,5 @@ namespace Skelbimu_sistema.Controllers
 			return RedirectToAction("Index", "Home");
 
 		}
-
-		/// <summary>
-		/// Returns logged in user's id
-		/// </summary>
-		/// <returns>Id</returns>
-		[Authorize]
-        public int GetCurrentUserId()
-        {
-            return int.Parse(User.Claims.FirstOrDefault(c => c.Type == "Id")!.Value);
-        }
     }
 }

@@ -10,5 +10,7 @@ namespace Skelbimu_sistema.ViewModels
 
 		[Required(ErrorMessage = "Privaloma įvesti slaptažodį")]
 		public string Password { get; set; } = string.Empty;
+
+		public string? ReturnUrl { get; set; } = string.Empty;
 	}
 }

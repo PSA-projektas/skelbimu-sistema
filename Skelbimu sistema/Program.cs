@@ -1,60 +1,40 @@
 global using Microsoft.EntityFrameworkCore;
 global using Skelbimu_sistema.Models;
 global using Skelbimu_sistema.Data;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using Skelbimu_sistema.Services;
-using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllersWithViews();
+
+// Add DB context
 builder.Services.AddDbContext<DataContext>(options =>
 {
-	// The connection string is retrieved from the appsettings.json
 	options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-
-
-builder.Services.AddAuthentication(x =>
-{
-	x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-	x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-	x.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(x =>
-{
-	x.TokenValidationParameters = new TokenValidationParameters
-	{
-		ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
-		ValidAudience = builder.Configuration["JwtSettings:Issuer"],
-		IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Key"]!)),
-		ValidateIssuer = true,
-		ValidateAudience = true,
-		ValidateLifetime = true,
-		ValidateIssuerSigningKey = true
-    };
-
-    x.Events = new JwtBearerEvents
+// Configure Cookie Authentication
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
     {
-		OnMessageReceived = context =>
-		{
-			if (context.Request.Cookies.ContainsKey("AuthToken"))
-			{
-				context.Token = context.Request.Cookies["AuthToken"];
-			}
-			return Task.CompletedTask;
-		}
-    };
-});
+        options.LoginPath = "/naudotojai/prisijungimas";
+        options.AccessDeniedPath = "/naudotojai/uzdrausta";
+        options.Cookie.HttpOnly = true; // Set HttpOnly to true for security reasons
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // Ensure cookies are only sent over HTTPS
+        options.Cookie.SameSite = SameSiteMode.Strict; // Avoid CSRF vulnerabilities
+    });
+
 builder.Services.AddAuthorization(options =>
 {
-	options.AddPolicy("IsAdmin", p =>
-		p.RequireClaim("Role", "Admin"));
+    options.AddPolicy("IsAdmin", p =>
+        p.RequireClaim(ClaimTypes.Role, "Admin"));
 });
+
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 var app = builder.Build();
 
@@ -67,17 +47,10 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-app.UseAuthentication();
-
-app.UseAuthorization();
-
 app.UseStaticFiles();
-
 app.UseRouting();
 
 app.UseAuthentication();
-
 app.UseAuthorization();
 
 app.MapControllerRoute(

@@ -32,7 +32,7 @@ namespace Skelbimu_sistema.Controllers
         {
             ProductCreationRequest request = new ProductCreationRequest();
 
-            int userId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == "Id")!.Value);
+            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             var user = await _dataContext.Users.FindAsync(userId);
 
             ViewData["UserRole"] = user.Role;
@@ -52,7 +52,7 @@ namespace Skelbimu_sistema.Controllers
             }
 
             // Get user and check if not blocked
-            int userId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == "Id")!.Value);
+            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             User user = _dataContext.Users.Find(userId)!;
             if (user.Blocked)
             {
@@ -103,7 +103,7 @@ namespace Skelbimu_sistema.Controllers
         [Route("Product/ViewInventory")]
         public async Task<IActionResult> ViewInventory()
         {
-            int userId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == "Id")!.Value);
+            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             var user = await _dataContext.Users.FindAsync(userId);
 
             var userInventory = await _dataContext.Products
@@ -209,7 +209,7 @@ namespace Skelbimu_sistema.Controllers
 
             // Save changes to the database
             _dataContext.SaveChanges();
-            TempData["SuccessMessageInventory"] = "Produktas redaguotas sėkmingai!";
+            TempData["SuccessMessage"] = "Skelbimas atnaujintas sėkmingai";
             return RedirectToAction("ViewInventory"); // Redirect to the inventory view after editing
         }
 
@@ -248,7 +248,7 @@ namespace Skelbimu_sistema.Controllers
             if (HttpContext.Request.Cookies.ContainsKey("AuthToken"))
             {
                 // Save search history
-                var userId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == "Id")!.Value);
+                var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
                 SaveSearchHistory(searchString, userId);
 
                 return View("SearchResults", filteredProducts);
