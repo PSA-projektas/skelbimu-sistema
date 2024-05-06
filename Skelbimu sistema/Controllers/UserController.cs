@@ -30,7 +30,9 @@ namespace Skelbimu_sistema.Controllers
 			_unitOfWork = unitOfWork;
 		}
 
-		[HttpGet("registracija")]
+        #region Registration
+
+        [HttpGet("registracija")]
 		public IActionResult Registration()
 		{
 			UserRegistrationRequest request = new UserRegistrationRequest();
@@ -43,12 +45,13 @@ namespace Skelbimu_sistema.Controllers
 		{
 			if (_dataContext.Users.Any(u => u.Email == request.Email))
 			{
-				ModelState.AddModelError("Email", "Naudotojas su šiuo pašto adresu jau egzistuoja");	
+				ModelState.AddModelError("Email", "Elektroninis paštas netinkamas");	
 			}
 
 			if (!ModelState.IsValid)
 			{
-				return View("Registration", request); // Return to the registration view with errors
+				TempData["ErrorMessage"] = "Registracija nepavyko";
+				return View("Registration", request);
 			}
 
 			CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
@@ -66,11 +69,32 @@ namespace Skelbimu_sistema.Controllers
 
 			_dataContext.Users.Add(user);
             await _dataContext.SaveChangesAsync();
-            return SendVerification(user.Email, user.VerificationToken);
+
+            SendVerification(user.Email, user.VerificationToken);
+
+			TempData["SuccessMessage"] = "Sėkmingai užsiregistravote";
+            return RedirectToAction("Index", "Home");
         }
 
-		[HttpGet("patvirtinti")]
-		public IActionResult SendVerification(string emailAddress, string token)
+        private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
+        {
+            using (var hmac = new HMACSHA512())
+            {
+                passwordSalt = hmac.Key;
+                passwordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+            }
+        }
+
+        private string CreateRandomToken()
+        {
+            return Convert.ToHexString(RandomNumberGenerator.GetBytes(64));
+        }
+
+        #endregion
+
+        #region Email verification
+
+        private void SendVerification(string emailAddress, string token)
 		{
 			var email = new MimeMessage();
 			email.From.Add(MailboxAddress.Parse("sistemaskelbimu@gmail.com"));
@@ -99,30 +123,40 @@ namespace Skelbimu_sistema.Controllers
                 smtp.Send(email);
                 smtp.Disconnect(true);
             }
-
-			return RedirectToAction("Index", "Home");
         }
 
         [HttpPost("patvirtinti")]
         public async Task<IActionResult> Verify(string token)
 		{
 			var user = await _dataContext.Users.FirstOrDefaultAsync(u => u.VerificationToken == token);
+
 			if(user == null)
 			{
+				TempData["ErrorMessage"] = "Patvirtinimas nepavyko";
+				// TODO: redirect to special verification page
                 return RedirectToAction("Login", "User");
             }
 
+			// Apply changes only if not already verified
 			if (user.VerificationDate == null)
 			{
                 user.VerificationDate = DateTime.Now;
+                await _dataContext.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Naudotojas sėkmingai patvirtintas";
             }
-            
-			await _dataContext.SaveChangesAsync();
-
+			else
+			{
+                TempData["SuccessMessage"] = "Naudotojas jau patvirtintas";
+            }
+			
 			return RedirectToAction("Login", "User");
 		}
 
-		[HttpGet("prisijungimas")]
+        #endregion
+
+        #region Login
+
+        [HttpGet("prisijungimas")]
 		public IActionResult Login(string returnUrl = "")
 		{
 			UserLoginRequest request = new UserLoginRequest()
@@ -138,39 +172,27 @@ namespace Skelbimu_sistema.Controllers
 		{
 			if (!ModelState.IsValid)
 			{
-                var errors = ModelState.Values.SelectMany(v => v.Errors)
-                                   .Select(e => e.ErrorMessage)
-                                   .ToList();
-
-                string errorMessage = string.Join("; ", errors);
-                TempData["ErrorMessage"] = errorMessage;
+                TempData["ErrorMessage"] = "Prisijungimas nepavyko";
 				return View("Login", request);
 			}
 
 			var user = await _dataContext.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
 
-			if (user == null)
+			if (user == null || !VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt))
 			{
                 TempData["ErrorMessage"] = "Prisijungimas nepavyko";
                 ModelState.AddModelError("Email", "Prisijungti nepavyko. Patikrinkite savo pašto adresą ir slaptažodį");
 				return View("Login", request);
 			}
 
-			if (user.VerificationDate == null)
-			{
+            if (user.VerificationDate == null)
+            {
                 TempData["ErrorMessage"] = "Prisijungimas nepavyko";
                 ModelState.AddModelError("Email", "Naudotojas nėra patvirtintas");
-				return View("Login", request);
-			}
+                return View("Login", request);
+            }
 
-			if (!VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt))
-			{
-                TempData["ErrorMessage"] = "Prisijungimas nepavyko";
-                ModelState.AddModelError("Email", "Prisijungti nepavyko. Patikrinkite savo pašto adresą ir slaptažodį");
-				return View("Login", request);
-			}
-
-			var claims = new List<Claim>
+            var claims = new List<Claim>
 			{
 				new Claim(ClaimTypes.Email, user.Email),
 				new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
@@ -186,6 +208,7 @@ namespace Skelbimu_sistema.Controllers
 				);
 
 			TempData["SuccessMessage"] = "Sėkmingai prisijungėte";
+
 			// Check if the returnUrl is local to prevent redirect attacks
 			if (Url.IsLocalUrl(request.ReturnUrl))
 			{
@@ -193,11 +216,24 @@ namespace Skelbimu_sistema.Controllers
 			}
 			else
 			{
-				return RedirectToAction("Index", "Home"); // Fallback to home page
+				return RedirectToAction("Index", "Home");
 			}
 		}
 
-		[HttpPost("atsijungti")]
+        private bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
+        {
+            using (var hmac = new HMACSHA512(passwordSalt))
+            {
+                var computedHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+                return computedHash.SequenceEqual(passwordHash);
+            }
+        }
+
+        #endregion
+
+        #region Logout
+
+        [HttpPost("atsijungti")]
 		public async Task<IActionResult> SubmitLogoutAsync()
 		{
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
@@ -205,7 +241,11 @@ namespace Skelbimu_sistema.Controllers
             return RedirectToAction("Index", "Home");
 		}
 
-		[HttpGet("priminti-slaptazodi")]
+        #endregion
+
+        #region Password reset
+
+        [HttpGet("priminti-slaptazodi")]
 		public IActionResult ForgotPassword()
 		{
 			return View(new ForgotPasswordRequest());
@@ -216,6 +256,7 @@ namespace Skelbimu_sistema.Controllers
 		{
 			if (!ModelState.IsValid)
 			{
+				TempData["Error message"] = "Išsiųsti laiško nepavyko";
 				return View("ForgotPassword", request);
 			}
 
@@ -223,7 +264,8 @@ namespace Skelbimu_sistema.Controllers
 
 			if (user == null)
 			{
-				ModelState.AddModelError("Email", "Naudotojas nerastas");
+                TempData["Error message"] = "Išsiųsti laiško nepavyko";
+                ModelState.AddModelError("Email", "Naudotojas nerastas");
 				return View("ForgotPassword", request);
 			}
 
@@ -233,6 +275,8 @@ namespace Skelbimu_sistema.Controllers
 
 			SendPasswordReset(user.Email, user.PasswordResetToken);
 
+			TempData["Success message"] = "Laiškas išsiųstas";
+			// TODO: redirect to special page with resend
 			return RedirectToAction("Login", "User");
 		}
 
@@ -275,6 +319,7 @@ namespace Skelbimu_sistema.Controllers
 		{
 			if (!ModelState.IsValid)
 			{
+				TempData["Error message"] = "Slaptažodžio keitimas nepavyko";
 				return View("ResetPassword", request);
 			}
 
@@ -282,13 +327,15 @@ namespace Skelbimu_sistema.Controllers
 
 			if (user == null)
 			{
-				ModelState.AddModelError("Password", "Slaptažodžio keitimas negalimas");
+                TempData["Error message"] = "Slaptažodžio keitimas nepavyko";
+                ModelState.AddModelError("Password", "Slaptažodžio keitimas negalimas");
 				return View("ResetPassword", request);
 			}
 
 			if (user.ResetTokenExpirationDate < DateTime.Now)
 			{
-				ModelState.AddModelError("Password", "Slaptažodžio keitimas nebegalioja");
+                TempData["Error message"] = "Slaptažodžio keitimas nepavyko";
+                ModelState.AddModelError("Password", "Slaptažodžio keitimas nebegalioja");
 				return View("ResetPassword", request);
 			}
 
@@ -302,13 +349,18 @@ namespace Skelbimu_sistema.Controllers
 			user.ResetTokenExpirationDate = null;
 			await _dataContext.SaveChangesAsync();
 
-			return RedirectToAction("Login", "User");
+            TempData["Success message"] = "Slaptažodis sėkmingai pakeistas";
+            return RedirectToAction("Login", "User");
 		}
 
-		[HttpGet("naudotojai/{userId}")]
+        #endregion
+
+        #region User details
+
+        [HttpGet("naudotojai/{userId}")]
         public IActionResult Details(int userId)
 		{
-			//// Retrieve user details based on the id parameter
+			// Retrieve user details based on the id parameter
 			var user = _dataContext.Users.FirstOrDefault(user => user.Id == userId);
 
 			if (user == null)
@@ -319,34 +371,19 @@ namespace Skelbimu_sistema.Controllers
 			return View(user);
 		}
 
-		[HttpGet("uzdrausta")]
+        #endregion
+
+        #region Forbidden
+
+        [HttpGet("uzdrausta")]
 		public IActionResult Forbidden()
 		{
 			return View();
 		}
 
-		private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
-		{
-			using (var hmac = new HMACSHA512())
-			{
-				passwordSalt = hmac.Key;
-				passwordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
-			}
-		}
+        #endregion
 
-		private bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
-		{
-			using (var hmac = new HMACSHA512(passwordSalt))
-			{
-				var computedHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
-				return computedHash.SequenceEqual(passwordHash);
-			}
-		}
-
-		private string CreateRandomToken()
-		{
-			return Convert.ToHexString(RandomNumberGenerator.GetBytes(64));
-		}
+        #region Payment
 
         [Authorize]
         [HttpGet("PaymentSuccessful")]
@@ -415,5 +452,7 @@ namespace Skelbimu_sistema.Controllers
 			return RedirectToAction("Index", "Home");
 
 		}
+
+        #endregion
     }
 }
