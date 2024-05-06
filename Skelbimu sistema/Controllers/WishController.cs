@@ -429,8 +429,8 @@ namespace Skelbimu_sistema.Controllers
             foreach (var product in products)
             {
                 if (ValidateProductForSuggestion(product, keywords) &&
-                    ValidateProductDetails(product, wish) /*&&
-                    ValidateProductPaymentType(product, wish)*/)
+                    ValidateProductDetails(product, wish) &&
+                    ValidateProductPaymentType(product, wish))
                 {
                     suggestions.Add(product);
                 }
