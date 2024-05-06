@@ -29,6 +29,9 @@
 						<p>Dar neturite paskyros? <a asp-controller="User" asp-action="Registration">Užsiregistruokite</a></p>
 					</div>
 					<div class="row mt-2">
+						<p>Negavote patvirtinimo laiško? <a asp-controller="User" asp-action="Verification" asp-route-email="@Model.Email">Persiųsti patvirtinimą</a></p>
+					</div>
+					<div class="row mt-2">
 						<p>Pamiršote slaptažodį? <a asp-controller="User" asp-action="ForgotPassword">Pakeisti slaptažodį</a></p>
 					</div>
 				</div>

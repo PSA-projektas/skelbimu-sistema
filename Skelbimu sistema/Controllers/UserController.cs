@@ -73,7 +73,7 @@ namespace Skelbimu_sistema.Controllers
             SendVerification(user.Email, user.VerificationToken);
 
 			TempData["SuccessMessage"] = "Sėkmingai užsiregistravote";
-            return RedirectToAction("Index", "Home");
+			return RedirectToAction("Verification", new SendVerificationRequest() { Email = user.Email });
         }
 
         private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
@@ -125,6 +125,47 @@ namespace Skelbimu_sistema.Controllers
             }
         }
 
+		[HttpGet("patvirtinimas")]
+		public IActionResult Verification(SendVerificationRequest request)
+		{
+            request ??= new SendVerificationRequest();
+
+            return View(request);
+		}
+
+		[HttpPost("siusti-patvirtinima")]
+		public async Task<IActionResult> SubmitSendVerification(SendVerificationRequest request)
+		{
+			if (!ModelState.IsValid)
+			{
+				TempData["ErrorMessage"] = "Išsiųsti patvirtinimo nepavyko";
+				return View("Verification", request);
+			}
+
+			if (!_dataContext.Users.Any(u => u.Email == request.Email))
+			{
+				ModelState.AddModelError("Email", "Elektroninis paštas netinkamas");
+				TempData["ErrorMessage"] = "Išsiųsti patvirtinimo nepavyko";
+				return View("Verification", request);
+			}
+
+			var user = _dataContext.Users.FirstOrDefault(u => u.Email == request.Email)!;
+
+			if(user.Role != UserRole.Unverified)
+			{
+				TempData["SuccessMessage"] = "Naudotojas jau patvirtintas";
+				return View("Verification", request);
+			}
+
+			user.VerificationToken = CreateRandomToken();
+			await _dataContext.SaveChangesAsync();
+
+			SendVerification(user.Email, user.VerificationToken);
+
+			TempData["SuccessMessage"] = "Patvirtinimas sėkmingai išsiųstas";
+			return RedirectToAction("Verification", request);
+		}
+
         [HttpPost("patvirtinti")]
         public async Task<IActionResult> Verify(string token)
 		{
@@ -133,14 +174,14 @@ namespace Skelbimu_sistema.Controllers
 			if(user == null)
 			{
 				TempData["ErrorMessage"] = "Patvirtinimas nepavyko";
-				// TODO: redirect to special verification page
-                return RedirectToAction("Login", "User");
+                return RedirectToAction("Verification");
             }
 
 			// Apply changes only if not already verified
 			if (user.VerificationDate == null)
 			{
                 user.VerificationDate = DateTime.Now;
+				user.Role = UserRole.Buyer;
                 await _dataContext.SaveChangesAsync();
                 TempData["SuccessMessage"] = "Naudotojas sėkmingai patvirtintas";
             }
