@@ -38,8 +38,10 @@ else
                                 <p class="card-text">@product.Description</p>
                                 <p class="card-text">Kaina: $@product.Price</p>
                                 <p class="card-text">Kategorija: @product.Category</p>
-                                <p class="card-text">Būsena: @(product.State == ProductState.Active ? "Aktyvus" : "Rezervuotas")</p>
-
+                                <p class="card-text">Būsena: @(
+                                product.State == ProductState.Active ? "Aktyvus" :
+                                product.State == ProductState.Reserved ? "Rezervuotas" :
+                                "Uždarytas")</p>
                             </div>
                             <div class="card-footer">
                                 <button class="btn btn-danger" onclick="deleteProduct('@product.Id')">Naikinti</button>

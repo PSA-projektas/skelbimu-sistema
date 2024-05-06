@@ -32,11 +32,26 @@
         <input asp-for="ImageUrl" class="form-control" />
         <span asp-validation-for="ImageUrl" class="text-danger"></span>
     </div>
+    <div class="form-group">
+        <label asp-for="State" class="control-label">Skelbimo būsena</label>
+        <select asp-for="State" class="form-control">
+            <option value="">Pasirinkite skelbimo būseną</option>
+            @foreach (var product in Enum.GetValues(typeof(Skelbimu_sistema.Models.ProductState)))
+            {
+                // Skip the "Suspended" option
+                if (product.ToString() != "Suspended")
+                {
+                    <option value="@product">@product</option>
+                }
+            }
+        </select>
+        <span asp-validation-for="State" class="text-danger"></span>
+    </div>
 
     <div class="form-group">
         <label asp-for="Category" class="control-label">Kategorija</label>
         <select asp-for="Category" class="form-control">
-            <option value="">Select Category</option>
+            <option value="">Pasirinkite kategorija</option>
             @foreach (var category in Enum.GetValues(typeof(Skelbimu_sistema.Models.Category)))
             {
                 <option value="@category">@category</option>

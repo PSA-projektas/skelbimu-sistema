@@ -205,6 +205,7 @@ namespace Skelbimu_sistema.Controllers
             product.Description = editedProduct.Description;
             product.Price = editedProduct.Price;
             product.ImageUrl = editedProduct.ImageUrl;
+            product.State = editedProduct.State;
             product.Category = editedProduct.Category;
 
             // Save changes to the database
