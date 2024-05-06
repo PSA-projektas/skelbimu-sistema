@@ -20,10 +20,8 @@ namespace Skelbimu_sistema.ViewModels
         [Range(0.01, double.MaxValue, ErrorMessage = "Maksimali kaina turi būti daugiau už 0.00")]
         public double PriceHigh { get; set; }
 
-        [Required(ErrorMessage = "Kategorija privaloma")]
         public Category Category { get; set; }
 
-        [Required(ErrorMessage = "Norimas mokėjimo būdas privalomas")]
         public WishPaymentType PaymentType { get; set; }
 
     }

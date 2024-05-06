@@ -49,7 +49,6 @@
                             <label asp-for="Category" class="control-label col-md-2">Kategorija:</label>
                             <div class="col-md-10">
                                 <select asp-for="Category" class="form-control">
-                                    <option value="">All</option>
                                     @foreach (var category in Html.GetEnumSelectList<Category>())
                                     {
                                         <option value="@category.Value">@category.Text</option>
@@ -62,7 +61,6 @@
                             <label asp-for="PaymentType" class="control-label col-md-2">Norimas mokėjimo būdas:</label>
                             <div class="col-md-10">
                                 <select asp-for="PaymentType" class="form-control">
-                                    <option value="" selected>All</option>
                                     @foreach (var type in Html.GetEnumSelectList<WishPaymentType>())
                                     {
                                         <option value="@type.Value">@type.Text</option>

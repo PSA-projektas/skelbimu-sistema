@@ -92,7 +92,7 @@ namespace Skelbimu_sistema.Controllers
             }
             if (request.PriceLow > request.PriceHigh)
             {
-                ModelState.AddModelError("PriceLow", "Minimali kaina negali būti aukštensė už maksimalią");
+                ModelState.AddModelError("PriceLow", "Minimali kaina negali būti aukštesnė už maksimalią");
             }
             // Get user and check if not blocked
             int userId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == "Id")!.Value);
@@ -349,7 +349,7 @@ namespace Skelbimu_sistema.Controllers
             }
             if (editedWish.PriceLow > editedWish.PriceHigh)
             {
-                ModelState.AddModelError("PriceLow", "Minimali kaina negali būti aukštensė už maksimalią");
+                ModelState.AddModelError("PriceLow", "Minimali kaina negali būti aukštesnė už maksimalią");
             }
 
             wish.Name = editedWish.Name;
@@ -387,13 +387,13 @@ namespace Skelbimu_sistema.Controllers
         /// <returns>List of products</returns>
         public List<Product> FindProductsByWish(Wish wish)
         {
-            if (wishSuggestionsUpdated == new DateTime(1, 1, 1) || 
-                wishSuggestionsUpdated.AddHours(1) <= DateTime.Now)
-            {
+            //if (wishSuggestionsUpdated == new DateTime(1, 1, 1) || 
+            //    wishSuggestionsUpdated.AddHours(1) <= DateTime.Now)
+            //{
                 wishSuggestionsUpdated = DateTime.Now;
                 userSuggestionsByWish = UpdateWishList(wish);
-                InformUserWishUpdate(wish); // send email
-            }     
+            //    InformUserWishUpdate(wish); // send email
+            //}     
             return userSuggestionsByWish;
         }
 
@@ -429,8 +429,8 @@ namespace Skelbimu_sistema.Controllers
             foreach (var product in products)
             {
                 if (ValidateProductForSuggestion(product, keywords) &&
-                    ValidateProductDetails(product, wish) &&
-                    ValidateProductPaymentType(product, wish))
+                    ValidateProductDetails(product, wish) /*&&
+                    ValidateProductPaymentType(product, wish)*/)
                 {
                     suggestions.Add(product);
                 }
@@ -463,7 +463,7 @@ namespace Skelbimu_sistema.Controllers
         private bool ValidateProductDetails(Product product, Wish wish)
         {
             if (product.Price >= wish.PriceLow && product.Price <= wish.PriceHigh &&
-                product.Category == wish.Category || wish.Category.ToString().Equals("All"))
+                product.Category == wish.Category || wish.Category == null)
             {
                 return true;
             }
@@ -478,8 +478,7 @@ namespace Skelbimu_sistema.Controllers
         /// <returns>Condition</returns>
         private bool ValidateProductPaymentType(Product product, Wish wish)
         {
-            if ((int)product.PaymentType == (int)wish.PaymentMethod ||
-                wish.PaymentMethod.Equals("All"))
+            if ((int)product.PaymentType == (int)wish.PaymentMethod - 1)
             {
                 return true;
             }
