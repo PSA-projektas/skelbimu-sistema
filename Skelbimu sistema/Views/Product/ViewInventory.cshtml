@@ -7,13 +7,6 @@
 
 }
 
-@if (TempData["SuccessMessageInventory"] != null)
-{
-    <div class="alert alert-success">
-        @TempData["SuccessMessageInventory"]
-    </div>
-}
-
 @if ((int)ViewData["UserRole"] == 1) // Checking if User Role is not equal to 2 (Seller)
 {
     <div class="text-center">

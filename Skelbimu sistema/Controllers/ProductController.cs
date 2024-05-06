@@ -32,7 +32,7 @@ namespace Skelbimu_sistema.Controllers
         {
             ProductCreationRequest request = new ProductCreationRequest();
 
-            int userId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == "Id")!.Value);
+            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             var user = await _dataContext.Users.FindAsync(userId);
 
             ViewData["UserRole"] = user.Role;
@@ -52,7 +52,7 @@ namespace Skelbimu_sistema.Controllers
             }
 
             // Get user and check if not blocked
-            int userId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == "Id")!.Value);
+            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             User user = _dataContext.Users.Find(userId)!;
             if (user.Blocked)
             {
@@ -103,7 +103,7 @@ namespace Skelbimu_sistema.Controllers
         [Route("Product/ViewInventory")]
         public async Task<IActionResult> ViewInventory()
         {
-            int userId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == "Id")!.Value);
+            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             var user = await _dataContext.Users.FindAsync(userId);
 
             var userInventory = await _dataContext.Products
@@ -209,7 +209,7 @@ namespace Skelbimu_sistema.Controllers
 
             // Save changes to the database
             _dataContext.SaveChanges();
-            TempData["SuccessMessageInventory"] = "Produktas redaguotas sėkmingai!";
+            TempData["SuccessMessage"] = "Skelbimas atnaujintas sėkmingai";
             return RedirectToAction("ViewInventory"); // Redirect to the inventory view after editing
         }
 
@@ -233,30 +233,32 @@ namespace Skelbimu_sistema.Controllers
             var searchLower = searchString.ToLower();
 
             // Get all products from the database
-            var allProducts = _dataContext.Products.ToList();
+            var allProducts = _dataContext.Products;
 
             // Filter products in memory
             var filteredProducts = allProducts
+                .Where(p => p.State == ProductState.Active)
+                .ToList()
                 .Where(p =>
                     p.Name.ToLower().Contains(searchLower) ||
                     p.Description.ToLower().Contains(searchLower) ||
-                    Enum.GetName(typeof(Category), p.Category)?.ToLower() == searchLower)
-                .ToList();
+                    Enum.GetName(typeof(Category), p.Category)!.ToLower() == searchLower);
 
-
-            // Check if user is logged in
-            if (HttpContext.Request.Cookies.ContainsKey("AuthToken"))
+			// Hide the products that have been reported by logged in user
+			if (User.Identity?.IsAuthenticated ?? false)
             {
-                // Save search history
-                var userId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == "Id")!.Value);
+                var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+                filteredProducts = filteredProducts.Where(p => !p.Reports.Any(r => r.UserId == userId)).ToList();
+            }
+
+            if (User.Identity?.IsAuthenticated ?? false)
+            {
+                // Save search history if user is logged in
+                var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
                 SaveSearchHistory(searchString, userId);
+            }
 
-                return View("SearchResults", filteredProducts);
-            }
-            else
-            {
-                return View("SearchResults", filteredProducts);               
-            }
+            return View("SearchResults", filteredProducts);
         }
 
         /// <summary>
@@ -302,7 +304,18 @@ namespace Skelbimu_sistema.Controllers
             }
 
             ViewBag.SelectedCategory = selectedCategory;
-            List<Product> products = _dataContext.Products.Where(p => p.Category == selectedCategory).ToList();
+            List<Product> products = _dataContext.Products
+                .Where(p => p.Category == selectedCategory)
+                .Include(p => p.Reports)
+                .Where(p => p.State == ProductState.Active)
+                .ToList();
+
+            // Hide the products that have been reported by logged in user
+            if (User.Identity?.IsAuthenticated ?? false)
+            {
+                var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+                products = products.Where(p => !p.Reports.Any(r => r.UserId == userId)).ToList();
+            }
 
             return View("SearchByCategory", products);
         }
@@ -319,7 +332,16 @@ namespace Skelbimu_sistema.Controllers
             ViewBag.SelectedCategory = selectedCategory;
             var filteredProducts = _dataContext.Products
                 .Where(p => p.Price >= minPrice && p.Price <= maxPrice && p.Category == selectedCategory)
+                .Include(p => p.Reports)
+                .Where(p => p.State == ProductState.Active)
                 .ToList();
+
+            // Hide the products that have been reported by logged in user
+            if (User.Identity?.IsAuthenticated ?? false)
+            {
+                var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+                filteredProducts = filteredProducts.Where(p => !p.Reports.Any(r => r.UserId == userId)).ToList();
+            }
 
             return View("SearchByCategory", filteredProducts);
         }
@@ -338,15 +360,24 @@ namespace Skelbimu_sistema.Controllers
             var searchLower = searchString.ToLower();
 
             // Get all products from the database
-            var allProducts = _dataContext.Products.ToList();
+            var allProducts = _dataContext.Products;
 
             // Filter products by price range and search string
             var filteredProducts = allProducts
-                .Where(p => p.Price >= minPrice && p.Price <= maxPrice &&
+				.Include(p => p.Reports)
+				.Where(p => p.State == ProductState.Active)
+				.ToList()
+				.Where(p => p.Price >= minPrice && p.Price <= maxPrice &&
                     (p.Name.ToLower().Contains(searchLower) ||
                     p.Description.ToLower().Contains(searchLower) ||
-                    Enum.GetName(typeof(Category), p.Category)?.ToLower() == searchLower))
-                .ToList();
+                    Enum.GetName(typeof(Category), p.Category)!.ToLower() == searchLower));
+
+            // Hide the products that have been reported by logged in user
+            if (User.Identity?.IsAuthenticated ?? false)
+            {
+                var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+                filteredProducts = filteredProducts.Where(p => !p.Reports.Any(r => r.UserId == userId)).ToList();
+            }
 
             // Return the filtered products to the view
             return View("SearchResults", filteredProducts);

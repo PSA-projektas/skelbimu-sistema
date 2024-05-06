@@ -4,6 +4,7 @@ using Skelbimu_sistema.Models;
 using Skelbimu_sistema.ViewModels;
 using System;
 using System.Diagnostics;
+using System.Security.Claims;
 
 namespace Skelbimu_sistema.Controllers
 {
@@ -20,11 +21,20 @@ namespace Skelbimu_sistema.Controllers
             _dbContext = dbContext;
         }
 
-
-
         public async Task<IActionResult> Index()
         {
-            List<Product> products = await _dbContext.Products.ToListAsync();
+            // Filter suspended, reserved and closed products
+            List<Product> products = await _dbContext.Products
+                .Include(p => p.Reports)
+                .Where(p => p.State == ProductState.Active)
+                .ToListAsync();
+
+            // Hide the products that have been reported by logged in user
+            if (User.Identity?.IsAuthenticated ?? false)
+            {
+                var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+                products = products.Where(p => !p.Reports.Any(r => r.UserId == userId)).ToList();
+            }
             
             return View(products);
         }

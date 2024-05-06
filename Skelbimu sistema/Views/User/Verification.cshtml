@@ -1,0 +1,32 @@
+﻿@using Skelbimu_sistema.ViewModels
+@{
+	ViewData["Title"] = "Naudotojo patvirtinimas";
+}
+
+@model SendVerificationRequest
+
+<div class="container mt-5">
+	<div class="row justify-content-center">
+		<div class="col-lg-8 col-md-10">
+			<div class="card">
+				<div class="card-body">
+					<h1 class="text-center">Naudotojo patvirtinimas</h1>
+					<p class="text-center">Jei negavote patvirtinimo laiško, arba patvirtinimas nesuveikė, galite persiųsti patvirtinimą.</p>
+					<form method="post" asp-action="SubmitSendVerification">
+						<div class="form-group mb-3">
+							<label asp-for="Email">Elektroninis paštas:</label>
+							<input asp-for="Email" type="email" class="form-control" required />
+							<span asp-validation-for="Email" class="text-danger"></span>
+						</div>
+						<button type="submit" class="btn btn-primary">Siųsti patvirtinimą</button>
+					</form>
+					<div class="row mt-2">
+						<p>Dar neturite paskyros? <a asp-controller="User" asp-action="Registration">Užsiregistruokite</a></p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+

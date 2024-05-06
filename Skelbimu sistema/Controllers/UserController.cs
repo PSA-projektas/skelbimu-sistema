@@ -1,17 +1,15 @@
-﻿using Azure.Core;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using Newtonsoft.Json;
-using Skelbimu_sistema.Models;
+using MimeKit;
+using MimeKit.Text;
 using Skelbimu_sistema.ViewModels;
 using Skelbimu_sistema.Services;
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
-using System.Text;
-using Microsoft.EntityFrameworkCore;
+using MailKit.Security;
+using MailKit.Net.Smtp;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication;
 
 namespace Skelbimu_sistema.Controllers
 {
@@ -21,7 +19,7 @@ namespace Skelbimu_sistema.Controllers
 	{
 		private readonly DataContext _dataContext;
 		private readonly IUnitOfWork _unitOfWork;
-		private readonly ILogger _logger;
+        private readonly Microsoft.Extensions.Logging.ILogger _logger;
         private const string TokenSecretKey = "SKELBIMUSISTEMASECRETTOKENKEY12345";
 		private static readonly TimeSpan TokenLifetime = TimeSpan.FromHours(1);
 
@@ -32,7 +30,9 @@ namespace Skelbimu_sistema.Controllers
 			_unitOfWork = unitOfWork;
 		}
 
-		[HttpGet("registracija")]
+        #region Registration
+
+        [HttpGet("registracija")]
 		public IActionResult Registration()
 		{
 			UserRegistrationRequest request = new UserRegistrationRequest();
@@ -45,12 +45,13 @@ namespace Skelbimu_sistema.Controllers
 		{
 			if (_dataContext.Users.Any(u => u.Email == request.Email))
 			{
-				ModelState.AddModelError("Email", "Naudotojas su šiuo pašto adresu jau egzistuoja");	
+				ModelState.AddModelError("Email", "Elektroninis paštas netinkamas");	
 			}
 
 			if (!ModelState.IsValid)
 			{
-				return View("Registration", request); // Return to the registration view with errors
+				TempData["ErrorMessage"] = "Registracija nepavyko";
+				return View("Registration", request);
 			}
 
 			CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
@@ -67,15 +68,142 @@ namespace Skelbimu_sistema.Controllers
 			};
 
 			_dataContext.Users.Add(user);
-			await _dataContext.SaveChangesAsync();
+            await _dataContext.SaveChangesAsync();
 
-			return RedirectToAction("Index", "Home"); // TODO: pass a success message
+            SendVerification(user.Email, user.VerificationToken);
+
+			TempData["SuccessMessage"] = "Sėkmingai užsiregistravote";
+			return RedirectToAction("Verification", new SendVerificationRequest() { Email = user.Email });
+        }
+
+        private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
+        {
+            using (var hmac = new HMACSHA512())
+            {
+                passwordSalt = hmac.Key;
+                passwordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+            }
+        }
+
+        private string CreateRandomToken()
+        {
+            return Convert.ToHexString(RandomNumberGenerator.GetBytes(64));
+        }
+
+        #endregion
+
+        #region Email verification
+
+        private void SendVerification(string emailAddress, string token)
+		{
+			var email = new MimeMessage();
+			email.From.Add(MailboxAddress.Parse("sistemaskelbimu@gmail.com"));
+			email.To.Add(MailboxAddress.Parse(emailAddress));
+			email.Subject = "Registracijos patvirtinimas";
+            // Construct the HTML body with a form and a button
+            var htmlBody = $@"
+				<html>
+				<head></head>
+				<body>
+					<p>Paspauskite žemiau esantį mygtuką, kad patvirtintumėte registraciją:</p>
+					<form action='http://localhost:5224/naudotojai/patvirtinti' method='post'>
+						<input type='hidden' name='token' value='{token}' />
+						<button type='submit'>Patvirtinti</button>
+					</form>
+				</body>
+				</html>";
+
+            email.Body = new TextPart(TextFormat.Html) { Text = htmlBody };
+
+            using (var smtp = new SmtpClient())
+            {
+                smtp.ServerCertificateValidationCallback = (s, c, h, e) => true;
+                smtp.Connect("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
+                smtp.Authenticate("sistemaskelbimu@gmail.com", "tpdo rnzp fxgj muyf");
+                smtp.Send(email);
+                smtp.Disconnect(true);
+            }
+        }
+
+		[HttpGet("patvirtinimas")]
+		public IActionResult Verification(SendVerificationRequest request)
+		{
+            request ??= new SendVerificationRequest();
+
+            return View(request);
 		}
 
-		[HttpGet("prisijungimas")]
-		public IActionResult Login()
+		[HttpPost("siusti-patvirtinima")]
+		public async Task<IActionResult> SubmitSendVerification(SendVerificationRequest request)
 		{
-			UserLoginRequest request = new UserLoginRequest();
+			if (!ModelState.IsValid)
+			{
+				TempData["ErrorMessage"] = "Išsiųsti patvirtinimo nepavyko";
+				return View("Verification", request);
+			}
+
+			if (!_dataContext.Users.Any(u => u.Email == request.Email))
+			{
+				ModelState.AddModelError("Email", "Elektroninis paštas netinkamas");
+				TempData["ErrorMessage"] = "Išsiųsti patvirtinimo nepavyko";
+				return View("Verification", request);
+			}
+
+			var user = _dataContext.Users.FirstOrDefault(u => u.Email == request.Email)!;
+
+			if(user.Role != UserRole.Unverified)
+			{
+				TempData["SuccessMessage"] = "Naudotojas jau patvirtintas";
+				return View("Verification", request);
+			}
+
+			user.VerificationToken = CreateRandomToken();
+			await _dataContext.SaveChangesAsync();
+
+			SendVerification(user.Email, user.VerificationToken);
+
+			TempData["SuccessMessage"] = "Patvirtinimas sėkmingai išsiųstas";
+			return RedirectToAction("Verification", request);
+		}
+
+        [HttpPost("patvirtinti")]
+        public async Task<IActionResult> Verify(string token)
+		{
+			var user = await _dataContext.Users.FirstOrDefaultAsync(u => u.VerificationToken == token);
+
+			if(user == null)
+			{
+				TempData["ErrorMessage"] = "Patvirtinimas nepavyko";
+                return RedirectToAction("Verification");
+            }
+
+			// Apply changes only if not already verified
+			if (user.VerificationDate == null)
+			{
+                user.VerificationDate = DateTime.Now;
+				user.Role = UserRole.Buyer;
+                await _dataContext.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Naudotojas sėkmingai patvirtintas";
+            }
+			else
+			{
+                TempData["SuccessMessage"] = "Naudotojas jau patvirtintas";
+            }
+			
+			return RedirectToAction("Login", "User");
+		}
+
+        #endregion
+
+        #region Login
+
+        [HttpGet("prisijungimas")]
+		public IActionResult Login(string returnUrl = "")
+		{
+			UserLoginRequest request = new UserLoginRequest()
+			{
+				ReturnUrl = returnUrl
+			};
 
 			return View(request);
 		}
@@ -85,77 +213,195 @@ namespace Skelbimu_sistema.Controllers
 		{
 			if (!ModelState.IsValid)
 			{
+                TempData["ErrorMessage"] = "Prisijungimas nepavyko";
 				return View("Login", request);
 			}
 
 			var user = await _dataContext.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
 
-			// Generic error message used to not give away too much information
-			var errorMessage = "Prisijungti nepavyko. Patikrinkite savo pašto adresą ir slaptažodį";
+			if (user == null || !VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt))
+			{
+                TempData["ErrorMessage"] = "Prisijungimas nepavyko";
+                ModelState.AddModelError("Email", "Prisijungti nepavyko. Patikrinkite savo pašto adresą ir slaptažodį");
+				return View("Login", request);
+			}
+
+            if (user.VerificationDate == null)
+            {
+                TempData["ErrorMessage"] = "Prisijungimas nepavyko";
+                ModelState.AddModelError("Email", "Naudotojas nėra patvirtintas");
+                return View("Login", request);
+            }
+
+            var claims = new List<Claim>
+			{
+				new Claim(ClaimTypes.Email, user.Email),
+				new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+				new Claim(ClaimTypes.Role, user.Role.ToString())
+			};
+
+			var claimsIdentity = new ClaimsIdentity(
+				claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+			await HttpContext.SignInAsync(
+				CookieAuthenticationDefaults.AuthenticationScheme,
+				new ClaimsPrincipal(claimsIdentity)
+				);
+
+			TempData["SuccessMessage"] = "Sėkmingai prisijungėte";
+
+			// Check if the returnUrl is local to prevent redirect attacks
+			if (Url.IsLocalUrl(request.ReturnUrl))
+			{
+				return Redirect(request.ReturnUrl);
+			}
+			else
+			{
+				return RedirectToAction("Index", "Home");
+			}
+		}
+
+        private bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
+        {
+            using (var hmac = new HMACSHA512(passwordSalt))
+            {
+                var computedHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+                return computedHash.SequenceEqual(passwordHash);
+            }
+        }
+
+        #endregion
+
+        #region Logout
+
+        [HttpPost("atsijungti")]
+		public async Task<IActionResult> SubmitLogoutAsync()
+		{
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+			TempData["SuccessMessage"] = "Sėkmingai atsijungėte";
+            return RedirectToAction("Index", "Home");
+		}
+
+        #endregion
+
+        #region Password reset
+
+        [HttpGet("priminti-slaptazodi")]
+		public IActionResult ForgotPassword()
+		{
+			return View(new ForgotPasswordRequest());
+		}
+
+		[HttpPost("priminti-slaptazodi")]
+		public async Task<IActionResult> SubmitForgotPasswordAsync(ForgotPasswordRequest request)
+		{
+			if (!ModelState.IsValid)
+			{
+				TempData["Error message"] = "Išsiųsti laiško nepavyko";
+				return View("ForgotPassword", request);
+			}
+
+			var user = await _dataContext.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
 
 			if (user == null)
 			{
-				ModelState.AddModelError("Email", errorMessage);
-				return View("Login", request);
+                TempData["Error message"] = "Išsiųsti laiško nepavyko";
+                ModelState.AddModelError("Email", "Naudotojas nerastas");
+				return View("ForgotPassword", request);
 			}
 
-			// TODO: implement email verification
-			//if (user.VerificationDate == null)
-			//{
-			//	ModelState.AddModelError("Email", "Naudotojas nėra patvirtintas");
-			//	return View("Login", request);
-			//}
+			user.PasswordResetToken = CreateRandomToken();
+			user.ResetTokenExpirationDate = DateTime.Now.AddDays(1);
+			await _dataContext.SaveChangesAsync();
 
-			if (!VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt))
+			SendPasswordReset(user.Email, user.PasswordResetToken);
+
+			TempData["Success message"] = "Laiškas išsiųstas";
+			// TODO: redirect to special page with resend
+			return RedirectToAction("Login", "User");
+		}
+
+		private void SendPasswordReset(string emailAddress, string token)
+		{
+			var email = new MimeMessage();
+			email.From.Add(MailboxAddress.Parse("sistemaskelbimu@gmail.com"));
+			email.To.Add(MailboxAddress.Parse(emailAddress));
+			email.Subject = "Slaptažodžio keitimas";
+			// Construct the HTML body with a form and a button
+			var htmlBody = $@"
+				<html>
+				<head></head>
+				<body>
+					<p>Paspauskite žemiau esantį mygtuką, kad patvirtintumėte slaptažodžio keitimą:</p>
+					<a href='http://localhost:5224/naudotojai/keisti-slaptazodi?token={token}'>Patvirtinti</a>
+				</body>
+				</html>";
+
+			email.Body = new TextPart(TextFormat.Html) { Text = htmlBody };
+
+			using (var smtp = new SmtpClient())
 			{
-				ModelState.AddModelError("Email", errorMessage);
-				return View("Login", request);
+				smtp.ServerCertificateValidationCallback = (s, c, h, e) => true;
+				smtp.Connect("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
+				smtp.Authenticate("sistemaskelbimu@gmail.com", "tpdo rnzp fxgj muyf");
+				smtp.Send(email);
+				smtp.Disconnect(true);
+			}
+		}
+
+		[HttpGet("keisti-slaptazodi")]
+		public IActionResult ResetPassword(string token)
+		{
+			return View(new ResetPasswordRequest() { Token = token });
+		}
+
+		[HttpPost("keisti-slaptazodi")]
+		public async Task<IActionResult> SubmitResetPasswordAsync(string token, ResetPasswordRequest request)
+		{
+			if (!ModelState.IsValid)
+			{
+				TempData["Error message"] = "Slaptažodžio keitimas nepavyko";
+				return View("ResetPassword", request);
 			}
 
-			// If login is valid create a JWT token
-			var jwt = GenerateToken(user);
+			var user = await _dataContext.Users.FirstOrDefaultAsync(u => u.PasswordResetToken == token);
 
-            // Set the JWT in a secure HttpOnly cookie
-            var cookieOptions = new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true
-            };
-            Response.Cookies.Append("AuthToken", jwt, cookieOptions);
+			if (user == null)
+			{
+                TempData["Error message"] = "Slaptažodžio keitimas nepavyko";
+                ModelState.AddModelError("Password", "Slaptažodžio keitimas negalimas");
+				return View("ResetPassword", request);
+			}
 
-            // Create a cookie with user's information
-            //var userInfo = new { Id = user.Id, Email = user.Email, FirstName = user.FirstName, LastName = user.LastName, PhoneNumber = user.PhoneNumber };
-            //var userCookieValue = JsonConvert.SerializeObject(userInfo);
-            //var cookieOptions = new CookieOptions
-            //{
-            //	Expires = DateTime.UtcNow.AddHours(2), // Set cookie expiration date
-            //	HttpOnly = true // Ensure the cookie is only accessible via HTTP(S)
-            //};
+			if (user.ResetTokenExpirationDate < DateTime.Now)
+			{
+                TempData["Error message"] = "Slaptažodžio keitimas nepavyko";
+                ModelState.AddModelError("Password", "Slaptažodžio keitimas nebegalioja");
+				return View("ResetPassword", request);
+			}
 
-            //// Add it to storage
-            //HttpContext.Response.Cookies.Append("User", userCookieValue, cookieOptions);
+			user.PasswordResetToken = CreateRandomToken();
 
-            return RedirectToAction("Index", "Home"); // TODO: pass a success message
+			CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
+
+			user.PasswordHash = passwordHash;
+			user.PasswordSalt = passwordSalt;
+			user.PasswordResetToken = null;
+			user.ResetTokenExpirationDate = null;
+			await _dataContext.SaveChangesAsync();
+
+            TempData["Success message"] = "Slaptažodis sėkmingai pakeistas";
+            return RedirectToAction("Login", "User");
 		}
 
-		[HttpPost("atsijungti")]
-		public IActionResult SubmitLogout()
-		{
-            // Remove the user auth token cookie
-            HttpContext.Response.Cookies.Delete("AuthToken");
+        #endregion
 
-            return RedirectToAction("Index", "Home"); // TODO: pass a success message
-		}
-
-		public IActionResult Index()
-		{
-			return View();
-		}
+        #region User details
 
         [HttpGet("naudotojai/{userId}")]
         public IActionResult Details(int userId)
 		{
-			//// Retrieve user details based on the id parameter
+			// Retrieve user details based on the id parameter
 			var user = _dataContext.Users.FirstOrDefault(user => user.Id == userId);
 
 			if (user == null)
@@ -166,66 +412,25 @@ namespace Skelbimu_sistema.Controllers
 			return View(user);
 		}
 
-		private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
+        #endregion
+
+        #region Forbidden
+
+        [HttpGet("uzdrausta")]
+		public IActionResult Forbidden()
 		{
-			using (var hmac = new HMACSHA512())
-			{
-				passwordSalt = hmac.Key;
-				passwordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
-			}
+			return View();
 		}
 
-		private bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
-		{
-			using (var hmac = new HMACSHA512(passwordSalt))
-			{
-				var computedHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
-				return computedHash.SequenceEqual(passwordHash);
-			}
-		}
+        #endregion
 
-		private string CreateRandomToken()
-		{
-			return Convert.ToHexString(RandomNumberGenerator.GetBytes(64));
-		}
-
-		private string GenerateToken(User user)
-		{
-			var tokenHandler = new JwtSecurityTokenHandler();
-			var key = Encoding.UTF8.GetBytes(TokenSecretKey);
-
-			var claims = new List<Claim>
-			{
-				new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-				new(JwtRegisteredClaimNames.Sub, user.Email),
-				new(JwtRegisteredClaimNames.Email, user.Email),
-				new("Id", user.Id.ToString(), ClaimValueTypes.Integer),
-				new("Role", user.Role.ToString(), ClaimValueTypes.String)
-			};
-
-			var tokenDescriptor = new SecurityTokenDescriptor
-			{
-				Subject = new ClaimsIdentity(claims),
-				Expires = DateTime.UtcNow.Add(TokenLifetime),
-				Issuer = "https://skelbimusistema.lt",
-				Audience = "https://skelbimusistema.lt",
-				SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256),
-            };
-			//"Issuer": "https://skelbimusistema.lt",
-			//"Audience": "https://skelbimusistema.lt"
-
-			var token = tokenHandler.CreateToken(tokenDescriptor);
-
-			var jwt = tokenHandler.WriteToken(token);
-
-			return jwt;
-        }
+        #region Payment
 
         [Authorize]
         [HttpGet("PaymentSuccessful")]
         public IActionResult PaymentSuccessful(string paymentId, string token, string PayerID)
 		{
-            int userId = int.Parse(User.Claims.FirstOrDefault(c => c.Type == "Id")!.Value);
+            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
             try
             {
@@ -289,14 +494,6 @@ namespace Skelbimu_sistema.Controllers
 
 		}
 
-		/// <summary>
-		/// Returns logged in user's id
-		/// </summary>
-		/// <returns>Id</returns>
-		[Authorize]
-        public int GetCurrentUserId()
-        {
-            return int.Parse(User.Claims.FirstOrDefault(c => c.Type == "Id")!.Value);
-        }
+        #endregion
     }
 }
