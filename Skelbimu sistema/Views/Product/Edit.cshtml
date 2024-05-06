@@ -51,7 +51,7 @@
     <div class="form-group">
         <label asp-for="Category" class="control-label">Kategorija</label>
         <select asp-for="Category" class="form-control">
-            <option value="">Pasirinkite kategorija</option>
+            <option value="">Pasirinkite kategoriją</option>
             @foreach (var category in Enum.GetValues(typeof(Skelbimu_sistema.Models.Category)))
             {
                 <option value="@category">@category</option>
@@ -59,7 +59,7 @@
         </select>
         <span asp-validation-for="Category" class="text-danger"></span>
     </div>
-
+    <br>
     <button type="submit" class="btn btn-primary">Saugoti</button>
     <a asp-controller="Product" asp-action="ViewInventory" class="btn btn-secondary">Grįžti atgal</a>
 </form>
