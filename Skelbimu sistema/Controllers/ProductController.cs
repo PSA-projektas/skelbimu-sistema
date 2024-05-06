@@ -237,16 +237,15 @@ namespace Skelbimu_sistema.Controllers
 
             // Filter products in memory
             var filteredProducts = allProducts
+                .Where(p => p.State == ProductState.Active)
+                .ToList()
                 .Where(p =>
                     p.Name.ToLower().Contains(searchLower) ||
                     p.Description.ToLower().Contains(searchLower) ||
-                    Enum.GetName(typeof(Category), p.Category)!.ToLower() == searchLower)
-                .Include(p => p.Reports)
-                .Where(p => p.State == ProductState.Active)
-                .ToList();
+                    Enum.GetName(typeof(Category), p.Category)!.ToLower() == searchLower);
 
-            // Hide the products that have been reported by logged in user
-            if (User.Identity?.IsAuthenticated ?? false)
+			// Hide the products that have been reported by logged in user
+			if (User.Identity?.IsAuthenticated ?? false)
             {
                 var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
                 filteredProducts = filteredProducts.Where(p => !p.Reports.Any(r => r.UserId == userId)).ToList();
@@ -365,13 +364,13 @@ namespace Skelbimu_sistema.Controllers
 
             // Filter products by price range and search string
             var filteredProducts = allProducts
-                .Where(p => p.Price >= minPrice && p.Price <= maxPrice &&
+				.Include(p => p.Reports)
+				.Where(p => p.State == ProductState.Active)
+				.ToList()
+				.Where(p => p.Price >= minPrice && p.Price <= maxPrice &&
                     (p.Name.ToLower().Contains(searchLower) ||
                     p.Description.ToLower().Contains(searchLower) ||
-                    Enum.GetName(typeof(Category), p.Category)!.ToLower() == searchLower))
-                .Include(p => p.Reports)
-                .Where(p => p.State == ProductState.Active)
-                .ToList();
+                    Enum.GetName(typeof(Category), p.Category)!.ToLower() == searchLower));
 
             // Hide the products that have been reported by logged in user
             if (User.Identity?.IsAuthenticated ?? false)

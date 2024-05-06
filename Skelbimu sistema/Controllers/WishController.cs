@@ -33,6 +33,7 @@ namespace Skelbimu_sistema.Controllers
         /// Shows user's products suggestions by search
         /// </summary>
         /// <returns>Page with suggestions</returns>
+        [Authorize]
         [HttpGet("suggestionPage")]
         public IActionResult OpenSuggestedProductsPage()
         {
@@ -127,20 +128,10 @@ namespace Skelbimu_sistema.Controllers
         /// <returns>Id</returns>
         public int GetCurrentUserId()
         {
-            var user = User;
-
-            if (user.Identity != null && user.Identity.IsAuthenticated)
+            if (User.Identity?.IsAuthenticated ?? false)
             {
-                var userIdClaim = user.Claims.FirstOrDefault(c => c.Type == "Id");
-
-                if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
-                {
-                    return userId;
-                }
-
-                // Couldn't get user id from User
-                return -1;
-            }
+                return int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+			}
 
             // User not logged in
             return -1;
@@ -194,7 +185,11 @@ namespace Skelbimu_sistema.Controllers
         /// <returns>List of products</returns>
         public List<Product> CreateSuggestionsBySearch()
         {
-            List<Product> products = _dataContext.Products.ToList();
+            List<Product> products = _dataContext.Products
+                .Include(p => p.Reports)
+				.Where(p => p.State == ProductState.Active)
+				.Where(p => !p.Reports.Any(r => r.UserId == int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!)))
+				.ToList();
             List<string> keywords = SelectKeyWords();
 
             var suggestions = new List<Product>();
@@ -222,7 +217,7 @@ namespace Skelbimu_sistema.Controllers
             List<string> normalizedKeywords = keywords.Select(keyword => keyword.Normalize(NormalizationForm.FormKD).ToLower()).ToList();
 
             // Combine product name and description and normalize to lowercase
-            string combinedProductInfo = (product.Name + " " + product.Description).Normalize(NormalizationForm.FormKD).ToLower();
+            string combinedProductInfo = (product.Name + " " + product.Description + " " + product.Category.ToString()).Normalize(NormalizationForm.FormKD).ToLower();
 
             // Check if any normalized keyword is contained in the combined product info
             foreach (var keyword in normalizedKeywords)
