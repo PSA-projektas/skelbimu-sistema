@@ -116,7 +116,7 @@ namespace Skelbimu_sistema.Controllers
             await _dataContext.SaveChangesAsync();
 
             // Set success message
-            TempData["SuccessMessage"] = "Noras sukurtas sėkmingai!";
+            //TempData["SuccessMessage"] = "Noras sukurtas sėkmingai!";
 
             return RedirectToAction("WishListPage");
         }
@@ -361,7 +361,7 @@ namespace Skelbimu_sistema.Controllers
 
             // Save changes to the database
             _dataContext.SaveChanges();
-            TempData["SuccessMessageWish"] = "Noras redaguotas sėkmingai!";
+            //TempData["SuccessMessageWish"] = "Noras redaguotas sėkmingai!";
             return RedirectToAction("WishListPage"); // Redirect to the wishlist view after editing
         }
 
@@ -429,8 +429,8 @@ namespace Skelbimu_sistema.Controllers
             foreach (var product in products)
             {
                 if (ValidateProductForSuggestion(product, keywords) &&
-                    ValidateProductDetails(product, wish)
-                    /* && ValidateProductPaymentType(product, wish)*/)
+                    ValidateProductDetails(product, wish) &&
+                    ValidateProductPaymentType(product, wish))
                 {
                     suggestions.Add(product);
                 }
@@ -463,7 +463,7 @@ namespace Skelbimu_sistema.Controllers
         private bool ValidateProductDetails(Product product, Wish wish)
         {
             if (product.Price >= wish.PriceLow && product.Price <= wish.PriceHigh &&
-                product.Category == wish.Category)
+                product.Category == wish.Category || wish.Category.ToString().Equals("All"))
             {
                 return true;
             }
@@ -478,7 +478,8 @@ namespace Skelbimu_sistema.Controllers
         /// <returns>Condition</returns>
         private bool ValidateProductPaymentType(Product product, Wish wish)
         {
-            if ((int)product.PaymentType == (int)wish.PaymentMethod)
+            if ((int)product.PaymentType == (int)wish.PaymentMethod ||
+                wish.PaymentMethod.Equals("All"))
             {
                 return true;
             }
