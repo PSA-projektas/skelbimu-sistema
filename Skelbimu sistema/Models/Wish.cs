@@ -17,7 +17,7 @@ namespace Skelbimu_sistema.Models
         public double PriceHigh { get; set; } = 0.0;
         public double PriceLow { get; set; } = 0.0;
 
-        public Category Category { get; set; }
+        public Category? Category { get; set; }
 
         [ForeignKey("UserId")]
         public int UserId { get; set; }
@@ -28,8 +28,9 @@ namespace Skelbimu_sistema.Models
 
     public enum WishPaymentType
     {
-        Cash = 0,
-        Card = 1,
-        Transaction = 2
+        All = 0,
+        Cash = 1,
+        Card = 2,
+        Transaction = 3
     }
 }
