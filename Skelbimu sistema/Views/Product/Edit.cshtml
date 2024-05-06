@@ -2,7 +2,24 @@
 
 @{
     ViewData["Title"] = "Skelbimo redagavimas";
+
+    string MapToLithuanian(string state)
+    {
+        switch (state)
+        {
+            case "Active":
+                return "Aktyvus";
+            case "Reserved":
+                return "Rezervuotas";
+            case "Closed":
+                return "Uždarytas";
+            default:
+                return state; // Return the original state if not found
+        }
+    }
 }
+
+
 
 <h2>Skelbimo redagavimas</h2>
 
@@ -41,7 +58,7 @@
                 // Skip the "Suspended" option
                 if (product.ToString() != "Suspended")
                 {
-                    <option value="@product">@product</option>
+                    <option value="@product">@MapToLithuanian(product.ToString())</option>
                 }
             }
         </select>
