@@ -89,7 +89,10 @@ namespace Skelbimu_sistema.Controllers
         public IActionResult Details(int id)
         {
             // Retrieve the product by id
-            var product = _dataContext.Products.Include(product => product.User).FirstOrDefault(product => product.Id == id);
+            var product = _dataContext.Products
+                .Include(product => product.User)
+                .Include(product => product.Suspension)
+                .FirstOrDefault(product => product.Id == id);
 
             if (product == null)
             {
@@ -166,47 +169,97 @@ namespace Skelbimu_sistema.Controllers
         public IActionResult Edit(int id)
         {
             // Retrieve the product by id
-            var product = _dataContext.Products.FirstOrDefault(p => p.Id == id);
+            var product = _dataContext.Products
+                .Include(product => product.User)
+                .Include(product => product.Suspension)
+                .FirstOrDefault(product => product.Id == id);
 
             if (product == null)
             {
                 return NotFound(); // Product not found
             }
 
+            var request = new ProductEditRequest()
+            {
+                Id = product.Id,
+                Name = product.Name,
+                Description = product.Description,
+                State = product.State,
+                Price = product.Price,
+                ImageUrl = product.ImageUrl,
+                StartDate = product.StartDate,
+                EndDate = product.EndDate,
+                Category = product.Category,
+                SuspensionReviewed = false,
+                SuspensionCorrected = false
+            };
+
+            if (product.State == ProductState.Suspended)
+            {
+                request.SuspensionReason = product.Suspension!.Reason;
+                request.SuspensionDate = product.Suspension!.Date;
+                request.SuspensionReviewed = product.Suspension!.Reviewed;
+                request.SuspensionCorrected = product.Suspension!.Corrected;
+            }
+
             // Pass the product data to the edit view
-            return View(product);
+            return View(request);
         }
 
         [Authorize]
         [HttpPost]
         [Route("Product/Edit")]
         [ValidateAntiForgeryToken]
-        public IActionResult Edit(Product editedProduct)
+        public IActionResult Edit(ProductEditRequest request)
         {
+            if (!ModelState.IsValid)
+            {
+                TempData["ErrorMessage"] = "Skelbimo redagavimas nepavyko";
+                return View(request);
+            }
+
             // Retrieve the existing product from the database
-            var product = _dataContext.Products.FirstOrDefault(p => p.Id == editedProduct.Id);
+            var product = _dataContext.Products
+                .Include(p => p.Suspension)
+                .FirstOrDefault(p => p.Id == request.Id);
 
             if (product == null)
             {
+                TempData["ErrorMessage"] = "Skelbimo redagavimas nepavyko";
                 return NotFound(); // Product not found
             }
+
             //check if editedproduct name is not empty
-            if (string.IsNullOrEmpty(editedProduct.Name))
+            if (string.IsNullOrEmpty(request.Name))
             {
                 ModelState.AddModelError("Name", "Pavadinimas negali būti tuščias");
+                TempData["ErrorMessage"] = "Skelbimo redagavimas nepavyko";
+                return View(request);
             }
+
             //check if price is not negative
-            if (editedProduct.Price < 0)
+            if (request.Price < 0)
             {
                 ModelState.AddModelError("Price", "Kaina negali būti neigiamas skaičius");
+                TempData["ErrorMessage"] = "Skelbimo redagavimas nepavyko";
+                return View(request);
             }
+
             // Update product details with the edited values
-            product.Name = editedProduct.Name;
-            product.Description = editedProduct.Description;
-            product.Price = editedProduct.Price;
-            product.ImageUrl = editedProduct.ImageUrl;
-            product.State = editedProduct.State;
-            product.Category = editedProduct.Category;
+            product.Name = request.Name;
+            product.Description = request.Description;
+            product.Price = request.Price;
+            product.ImageUrl = request.ImageUrl;
+            product.Category = request.Category;
+
+            if(product.State != ProductState.Suspended)
+            {
+                product.State = request.State;
+            }
+            else
+            {
+                product.Suspension!.Corrected = (bool)request.SuspensionCorrected!;
+            }
 
             // Save changes to the database
             _dataContext.SaveChanges();
