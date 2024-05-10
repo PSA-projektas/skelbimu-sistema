@@ -47,13 +47,18 @@
                                 </button>
                                 <ul class="dropdown-menu w-100" aria-labelledby="dropdownMenuButton">
                                     <li>
-                                        <a class="dropdown-item" asp-area="" asp-controller="Product" asp-action="Create">
-                                            <i class="bi bi-pencil"></i> Sukurti skelbimą
+                                        <a class="dropdown-item" asp-controller="User" asp-action="Details" asp-route-userId="@User.FindFirstValue(ClaimTypes.NameIdentifier)">
+                                            <i class="bi bi-person-badge"></i> Paskyra
                                         </a>
                                     </li>
                                     <li>
-                                        <a class="dropdown-item" asp-area="" asp-controller="Product" asp-action="ViewInventory">
-                                            <i class="bi bi-box"></i> Inventorius
+                                        <a class="dropdown-item" asp-controller="Wish" asp-action="Create">
+                                            <i class="bi bi-plus"></i> Sukurti norą
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Wish" asp-action="WishListPage">
+                                            <i class="bi bi-list"></i> Norų sąrašas
                                         </a>
                                     </li>
                                     <li>
@@ -62,19 +67,19 @@
                                         </a>
                                     </li>
                                     <li>
-                                        <a class="dropdown-item" asp-area="" asp-controller="Wish" asp-action="Create">
-                                            <i class="bi bi-plus"></i> Sukurti norą
+                                        <a class="dropdown-item" asp-controller="Product" asp-action="Create">
+                                            <i class="bi bi-pencil"></i> Sukurti skelbimą
                                         </a>
                                     </li>
                                     <li>
-                                        <a class="dropdown-item" asp-area="" asp-controller="Wish" asp-action="WishListPage">
-                                            <i class="bi bi-list"></i> Norų sąrašas
+                                        <a class="dropdown-item" asp-controller="Product" asp-action="ViewInventory">
+                                            <i class="bi bi-box"></i> Inventorius
                                         </a>
                                     </li>
                                     @if (User.IsInRole("Admin"))
                                     {
                                         <li>
-                                            <a class="dropdown-item" asp-area="" asp-controller="Admin" asp-action="Index">
+                                            <a class="dropdown-item" asp-controller="Admin" asp-action="Index">
                                                 <i class="bi bi-wrench"></i> Administracija
                                             </a>
                                         </li>
@@ -91,12 +96,12 @@
                         else
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-controller="User" asp-action="Login">
+                                <a class="nav-link" asp-controller="User" asp-action="Login">
                                     <i class="bi bi-person-check"></i> Prisijungti
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-controller="User" asp-action="Registration">
+                                <a class="nav-link" asp-controller="User" asp-action="Registration">
                                     <i class="bi bi-person-plus"></i> Registruotis
                                 </a>
                             </li>

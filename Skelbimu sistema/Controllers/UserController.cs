@@ -10,6 +10,7 @@ using MailKit.Security;
 using MailKit.Net.Smtp;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
+using Skelbimu_sistema.Models;
 
 namespace Skelbimu_sistema.Controllers
 {
@@ -398,7 +399,7 @@ namespace Skelbimu_sistema.Controllers
 
         #region User details
 
-        [HttpGet("naudotojai/{userId}")]
+        [HttpGet("{userId}")]
         public IActionResult Details(int userId)
 		{
 			// Retrieve user details based on the id parameter
@@ -411,6 +412,30 @@ namespace Skelbimu_sistema.Controllers
 
 			return View(user);
 		}
+
+		[Authorize]
+        [HttpPost("atnaujinti")]
+        public IActionResult UpdateUser(User request)
+        {
+			if (int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!) != request.Id)
+			{
+				TempData["ErrorMessage"] = "Neturite teisės";
+                return RedirectToAction("Details", new { userId = request.Id });
+            }
+
+            var user = _dataContext.Users.FirstOrDefault(u => u.Id == request.Id);
+
+            if (user != null)
+            {
+                user.FirstName = request.FirstName;
+                user.LastName = request.LastName;
+                user.PhoneNumber = request.PhoneNumber;
+                _dataContext.SaveChanges();
+				TempData["SuccessMessage"] = "Paskyra sėkmingai atnaujinta";
+            }
+
+            return RedirectToAction("Details", new { userId = request.Id });
+        }
 
         #endregion
 

@@ -1,36 +1,75 @@
 ﻿@{
-	ViewData["Title"] = "Naudotojo paskyra";
+    ViewData["Title"] = "Naudotojo paskyra";
 }
 
 @model Skelbimu_sistema.Models.User
 
 <div class="container mt-5">
-	<div class="row justify-content-center">
-		<div class="col-lg-8 col-md-10">
-			<div class="card">
-				<div class="card-body">
-					<h1 class="text-center">@(Model.FirstName + " " + Model.LastName)</h1>
-					<p class="text-center">Naudotojo paskyra</p>
-					<div class="form-group mb-3">
-						<label for="email">Elektroninis paštas:</label>
-						<input type="email" class="form-control" id="email" name="email" value=@Model.Email required disabled />
-					</div>
-					<div class="form-group mb-3">
-						<label for="firstName">Vardas:</label>
-						<input type="firstName" class="form-control" id="firstName" name="firstName" value=@Model.FirstName required disabled />
-					</div>
-					<div class="form-group mb-3">
-						<label for="lastName">Pavardė:</label>
-						<input type="lastName" class="form-control" id="lastName" name="lastName" value=@Model.LastName required disabled />
-					</div>
-					<div class="form-group mb-3">
-						<label for="phoneNumber">Telefono numeris:</label>
-						<input type="phoneNumber" class="form-control" id="phoneNumber" name="phoneNumber" value=@Model.PhoneNumber required disabled />
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <div class="card">
+                <div class="card-body">
+                    <h1 class="text-center">@(Model.FirstName + " " + Model.LastName)</h1>
+                    <p class="text-center">Naudotojo paskyra</p>
+                    <form method="post" asp-controller="User" asp-action="UpdateUser">
+                        <input type="hidden" id="userId" name="Id" value="@Model.Id" />
+
+                        <div class="form-group mb-3">
+                            <label for="email">Elektroninis paštas:</label>
+                            <input type="email" class="form-control" id="email" name="email" value=@Model.Email required disabled />
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="firstName">Vardas:</label>
+                            <input type="text" class="form-control" id="firstName" name="firstName" value=@Model.FirstName required disabled />
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="lastName">Pavardė:</label>
+                            <input type="text" class="form-control" id="lastName" name="lastName" value=@Model.LastName required disabled />
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="phoneNumber">Telefono numeris:</label>
+                            <input type="text" class="form-control" id="phoneNumber" name="phoneNumber" value=@Model.PhoneNumber disabled />
+                        </div>
+
+                        <!-- Edit button -->
+                        <button type="button" class="btn btn-secondary mt-2" id="editButton">Redaguoti paskyrą</button>
+
+                        <!-- Submit button -->
+                        <button type="submit" class="btn btn-primary mt-2" id="submitButton" style="display:none;">Atnaujinti paskyrą</button>
+
+                        <!-- Cancel button -->
+                        <button type="button" class="btn btn-danger mt-2" id="cancelButton" style="display:none;">Atšaukti</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('editButton').addEventListener('click', function () {
+            enableDisableFields(false); // Enable fields
+            document.getElementById('email').disabled = true
+            document.getElementById('submitButton').style.display = 'inline-block';
+            document.getElementById('cancelButton').style.display = 'inline-block';
+            this.style.display = 'none';
+        });
+
+        document.getElementById('cancelButton').addEventListener('click', function () {
+            enableDisableFields(true); // Disable fields
+            document.getElementById('firstName').value = '@Model.FirstName';
+            document.getElementById('lastName').value = '@Model.LastName';
+            document.getElementById('phoneNumber').value = '@Model.PhoneNumber';
+            document.getElementById('editButton').style.display = 'inline-block';
+            document.getElementById('submitButton').style.display = 'none';
+            this.style.display = 'none';
+        });
+
+        function enableDisableFields(disabled) {
+            document.getElementById('email').disabled = disabled;
+            document.getElementById('firstName').disabled = disabled;
+            document.getElementById('lastName').disabled = disabled;
+            document.getElementById('phoneNumber').disabled = disabled;
+        }
+    </script>
+
 </div>
-
-
