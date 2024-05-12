@@ -21,14 +21,8 @@ namespace Skelbimu_sistema.Models
         public DateTime? ResetTokenExpirationDate { get; set; }
         public string? SearchKeyWords { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Navigation property for the user's products
-        /// </summary>
         public ICollection<Product> Products { get; set; } = new List<Product>();
 
-        /// <summary>
-        /// Navigation property for the user's reports
-        /// </summary>
         public ICollection<Report> Reports { get; set; } = new List<Report>();
     }
 

@@ -20,9 +20,9 @@ namespace Skelbimu_sistema.Models
 
         public string ImageUrl { get; set; } = string.Empty;
 
-        public string StartDate { get; set; } // šito nėra klasių diagramose
+        public string StartDate { get; set; } 
 
-        public string EndDate { get; set; } // šito nėra klasių diagramose
+        public string EndDate { get; set; } 
 
         public Category Category { get; set; }
 
@@ -30,14 +30,8 @@ namespace Skelbimu_sistema.Models
         public int UserId { get; set; }
         public User User { get; set; }
 
-        /// <summary>
-        /// Navigation property for the product's reports
-        /// </summary>
         public ICollection<Report> Reports { get; set; } = new List<Report>();
 
-        /// <summary>
-        /// Navigation property for the product's suspension
-        /// </summary>
         public Suspension? Suspension { get; set; }
     }
 
