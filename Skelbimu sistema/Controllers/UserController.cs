@@ -497,8 +497,8 @@ namespace Skelbimu_sistema.Controllers
 				decimal amount = 5;
 				//string returnUrl = "https://localhost:7188/naudotojai/PaymentSuccessful";
 				//string cancelUrl = "https://localhost:7188/naudotojai/PaymentUnsuccessful";
-                string returnUrl = "https://localhost:5224/naudotojai/PaymentSuccessful";
-				string cancelUrl = "https://localhost:5224/naudotojai/PaymentUnsuccessful";
+                string returnUrl = "http://localhost:5224/naudotojai/PaymentSuccessful";
+				string cancelUrl = "http://localhost:5224/naudotojai/PaymentUnsuccessful";
 
                 var createdPayment = await _unitOfWork.PaypalServices.CreateOrderAsync(amount, returnUrl, cancelUrl);
 
