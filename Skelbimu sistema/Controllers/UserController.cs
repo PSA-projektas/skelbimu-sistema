@@ -495,10 +495,12 @@ namespace Skelbimu_sistema.Controllers
 			try
 			{
 				decimal amount = 5;
-				string returnUrl = "https://localhost:7188/naudotojai/PaymentSuccessful";
-				string cancelUrl = "https://localhost:7188/naudotojai/PaymentUnsuccessful";
+				//string returnUrl = "https://localhost:7188/naudotojai/PaymentSuccessful";
+				//string cancelUrl = "https://localhost:7188/naudotojai/PaymentUnsuccessful";
+                string returnUrl = "https://localhost:5224/naudotojai/PaymentSuccessful";
+				string cancelUrl = "https://localhost:5224/naudotojai/PaymentUnsuccessful";
 
-				var createdPayment = await _unitOfWork.PaypalServices.CreateOrderAsync(amount, returnUrl, cancelUrl);
+                var createdPayment = await _unitOfWork.PaypalServices.CreateOrderAsync(amount, returnUrl, cancelUrl);
 
 				string approvalUrl = createdPayment.links.FirstOrDefault(link => link.rel.ToLower() == "approval_url").href;
 

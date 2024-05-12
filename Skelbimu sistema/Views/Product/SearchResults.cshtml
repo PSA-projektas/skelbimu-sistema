@@ -44,8 +44,8 @@
             <br>
 
             <button onclick="filterResultsString()">Filtruoti</button>
-            <div id="priceRangeValues"></div>
         </div>
+        <span id="priceError" class="text-danger"></span>
     </div>
 </div>
 
@@ -69,6 +69,14 @@
         // Extract search string from the URL query parameters
         var urlParams = new URLSearchParams(window.location.search);
         var searchString = urlParams.get('searchString');
+
+        // Patikriname, ar minimali kaina yra mažesnė nei maksimali kaina
+        if (parseFloat(minPrice) > parseFloat(maxPrice)) {
+            document.getElementById("priceError").innerText = "Minimali kaina negali būti didesnė nei maksimali kaina.";
+            return; // Neleidžiame filtruoti, kol klaida nėra ištaisyta
+        } else {
+            document.getElementById("priceError").innerText = ""; // Išvalome klaidos pranešimą, jei klaida ištaisyta
+        }
 
         // Redirect to FilterByPrice action with selected price range and search string
         window.location.href = '@Url.Action("FilterByPriceString", "Product")' + '?minPrice=' + minPrice + '&maxPrice=' + maxPrice + '&searchString=' + searchString;

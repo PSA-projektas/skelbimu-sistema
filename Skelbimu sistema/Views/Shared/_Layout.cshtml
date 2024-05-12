@@ -127,19 +127,27 @@
         };
         }
 
-        <nav class="navbar navbar-expand-lg navbar-light bg-light">
-            <div class="form-inline">
-                <div class="btn-group mr-2" role="group" aria-label="Kategorijos">
-                    @foreach (var category in Enum.GetValues(typeof(Category)))
-                    {
-                        <form asp-controller="Product" asp-action="CategorySearch" method="get" class="mr-2">
-                            <input type="hidden" name="selectedCategory" value="@category" />
-                            <button type="submit" class="btn btn-primary btn-lg">@categoryTranslations[(Category)category]</button>
-                        </form>
-                    }
+        @if (ViewContext.RouteData.Values["Action"].ToString().Equals("Index", StringComparison.OrdinalIgnoreCase))
+        {
+            <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                <div class="form-inline w-100">
+                    <div class="btn-group d-flex w-100" role="group" aria-label="Kategorijos">
+                        <!-- Pridėjome d-flex -->
+                        @foreach (var category in Enum.GetValues(typeof(Category)))
+                        {
+                            <form asp-controller="Product" asp-action="CategorySearch" method="get" class="mr-2 flex-fill">
+                                <!-- Pridėjome flex-fill -->
+                                <input type="hidden" name="selectedCategory" value="@category" />
+                                <button type="submit" class="btn btn-primary btn-lg w-100">@categoryTranslations[(Category)category]</button> <!-- Pridėjome w-100 -->
+                            </form>
+                        }
+                    </div>
                 </div>
-            </div>
-        </nav>
+            </nav>
+
+
+
+        }
 
 
     </header>

@@ -276,7 +276,7 @@ namespace Skelbimu_sistema.Controllers
         /// </summary>
         /// <param name="searchString">User search words</param>
         /// <returns>View</returns>
-        [Route("product/filter")]
+        [Route("Product/Filter")]
         public IActionResult Filter(string searchString)
         {
             if (string.IsNullOrEmpty(searchString))
@@ -312,7 +312,9 @@ namespace Skelbimu_sistema.Controllers
                 SaveSearchHistory(searchString, userId);
             }
 
-            return View("SearchResults", filteredProducts);
+            //return View("SearchResults", filteredProducts);
+            return View("SearchResults", filteredProducts.ToList());
+
         }
 
         /// <summary>
@@ -434,7 +436,8 @@ namespace Skelbimu_sistema.Controllers
             }
 
             // Return the filtered products to the view
-            return View("SearchResults", filteredProducts);
+            //return View("SearchResults", filteredProducts);
+            return View("SearchResults", filteredProducts.ToList());
         }
 
         /// <summary>

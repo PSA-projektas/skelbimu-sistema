@@ -54,25 +54,24 @@
             </div>
         </div>
         <div class="col-lg-3">
-            <h4>Filtruoti pagal kainą:</h4>           
-<input type="range" id="minPrice" name="minPrice" min="0" max="1000" value="0" step="10" oninput="updateSliderValue('min')">
+            <h4>Filtruoti pagal kainą:</h4>
+            <input type="range" id="minPrice" name="minPrice" min="0" max="1000" value="0" step="10" oninput="updateSliderValue('min')">
             <input type="number" id="minPriceInput" name="minPriceInput" min="0" max="1000" step="5" oninput="updateSliderValue('min')">
-
-                <span id="minPriceValue">$0</span>
-                <br>
-                <input type="range" id="maxPrice" name="maxPrice" min="0" max="1000" value="1000" step="10" oninput="updateSliderValue('max')">
+            <span id="minPriceValue">$0</span>
+            <br>
+            <input type="range" id="maxPrice" name="maxPrice" min="0" max="1000" value="1000" step="10" oninput="updateSliderValue('max')">
             <input type="number" id="maxPriceInput" name="maxPriceInput" min="0" max="1000" step="5" oninput="updateSliderValue('max')">
-
-                <span id="maxPriceValue">$1000</span>
-                <br>
-
-                <button onclick="filterResults()">Filtruoti</button>
-                <div id="priceRangeValues"></div>         
+            <span id="maxPriceValue">$1000</span>
+            <br>
+            <button onclick="filterResults()">Filtruoti</button>            
         </div>
+        <span id="priceError" class="text-danger"></span>
+
+
     </div>
 </div>
 
-<script>
+ <script>
     function updateSliderValue(type) {
         var slider = type === 'min' ? document.getElementById("minPrice") : document.getElementById("maxPrice");
         var valueSpan = type === 'min' ? document.getElementById("minPriceValue") : document.getElementById("maxPriceValue");
@@ -80,7 +79,6 @@
 
         valueSpan.innerHTML = "$" + (inputValue !== "" ? inputValue : slider.value);
     }
-
 
     function filterResults() {
         var minPriceInput = document.getElementById("minPriceInput").value;
@@ -90,47 +88,21 @@
         var maxPrice = maxPriceInput !== "" ? maxPriceInput : document.getElementById("maxPrice").value;
         var selectedCategory = document.getElementById("selectedCategory").value;
 
+        // Patikriname, ar minimali kaina yra mažesnė nei maksimali kaina
+        if (parseFloat(minPrice) > parseFloat(maxPrice)) {
+            document.getElementById("priceError").innerText = "Minimali kaina negali būti didesnė nei maksimali kaina.";
+            return; // Neleidžiame filtruoti, kol klaida nėra ištaisyta
+        } else {
+            document.getElementById("priceError").innerText = ""; // Išvalome klaidos pranešimą, jei klaida ištaisyta
+        }
+
         // Redirect to FilterByPrice action with selected price range and category
         window.location.href = '@Url.Action("FilterByPrice", "Product")' + '?minPrice=' + minPrice + '&maxPrice=' + maxPrice + '&selectedCategory=' + selectedCategory;
-        //document.getElementById("priceRangeValues").innerHTML = "Pasirinkti intervalai: $" + minPrice + " - $" + maxPrice;
-    }
 
+        // Atnaujiname pasirinktą kainos intervalą
+        var priceRangeValues = document.getElementById("priceRangeValues");
+    }
 
 </script>
 
-@* <script>
-    function filterResults() {
-        var minPrice = document.getElementById("minPrice").value;
-        var maxPrice = document.getElementById("maxPrice").value;
-
-        $.ajax({
-            type: "GET",
-            url: "@Url.Action("FilterByPrice", "Filter")",
-            data: { minPrice: minPrice, maxPrice: maxPrice },
-            success: function (data) {
-                $('#productList').html(data);
-            },
-            error: function () {
-                alert("Error occurred while filtering products.");
-            }
-        });
-    }
-</script> *@
-
-@* <script>
-    function updateSliderValue(type) {
-        var slider = type === 'min' ? document.getElementById("minPrice") : document.getElementById("maxPrice");
-        var valueSpan = type === 'min' ? document.getElementById("minPriceValue") : document.getElementById("maxPriceValue");
-        valueSpan.innerHTML = "$" + slider.value;
-    }
-    function filterResults() {
-        var minPrice = document.getElementById("minPrice").value;
-        var maxPrice = document.getElementById("maxPrice").value;
-
-        // Atnaujinti rodyklę su pasirinktais kainų intervalais
-        document.getElementById("priceRangeValues").innerHTML = "Pasirinkti intervalai: $" + minPrice + " - $" + maxPrice;
-
-        // Redirect or send AJAX request to FilterController with minPrice and maxPrice values
-    }
-</script> *@
 
