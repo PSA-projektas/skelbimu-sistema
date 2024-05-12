@@ -39,14 +39,20 @@ else
                                 <p class="card-text">Kaina: $@product.Price</p>
                                 <p class="card-text">Kategorija: @product.Category</p>
                                 <p class="card-text">Būsena: @(
-                                product.State == ProductState.Active ? "Aktyvus" :
-                                product.State == ProductState.Reserved ? "Rezervuotas" :
-                                "Uždarytas")</p>
+                                    (product.State) switch
+                                    {
+                                        ProductState.Active => "Aktyvus",
+                                        ProductState.Reserved => "Rezervuotas",
+                                        ProductState.Closed => "Uždarytas",
+                                        ProductState.Suspended => "Suspenduotas",
+                                        _ => "Nenurodyta"
+                                    }
+                                )</p>
                             </div>
                             <div class="card-footer">
-                                <button class="btn btn-danger" onclick="deleteProduct('@product.Id')">Naikinti</button>
                                 <button class="btn btn-primary" onclick="editProduct('@product.Id')">Redaguoti</button>
-                                <button class="btn btn-info" onclick="changeProductState('@product.Id')">Keisti būseną</button>
+                                <button class="btn btn-danger" onclick="deleteProduct('@product.Id')">Naikinti</button>
+                                @* <button class="btn btn-info" onclick="changeProductState('@product.Id')">Keisti būseną</button> *@
                             </div>
 
                         </div>

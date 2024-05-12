@@ -1,4 +1,5 @@
-﻿@model Skelbimu_sistema.Models.Product
+﻿@using Skelbimu_sistema.ViewModels
+@model ProductEditRequest
 
 @{
     ViewData["Title"] = "Skelbimo redagavimas";
@@ -13,6 +14,8 @@
                 return "Rezervuotas";
             case "Closed":
                 return "Uždarytas";
+            case "Suspended":
+                return "Suspenduotas";
             default:
                 return state; // Return the original state if not found
         }
@@ -22,6 +25,8 @@
 
 
 <h2>Skelbimo redagavimas</h2>
+
+@Html.ValidationSummary()
 
 <form asp-action="Edit" method="post">
     <input type="hidden" asp-for="Id" />
@@ -39,6 +44,26 @@
     </div>
 
     <div class="form-group">
+        <label asp-for="StartDate" class="control-label col-md-2">Pradžios data:</label>
+        <div>
+            <input asp-for="StartDate" class="form-control" type="date" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+            <span asp-validation-for="StartDate" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="EndDate" class="control-label col-md-2">Pabaigos data:</label>
+        <div>
+            @{
+                DateTime nextMonth = DateTime.Now.AddMonths(1);
+                string nextMonthString = $"{nextMonth.Year}-{nextMonth.Month:D2}-{nextMonth.Day:D2}";
+            }
+            <input asp-for="EndDate" class="form-control" type="date" value="@nextMonthString" />
+            <span asp-validation-for="EndDate" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="form-group">
         <label asp-for="Price" class="control-label">Kaina</label>
         <input asp-for="Price" class="form-control" />
         <span asp-validation-for="Price" class="text-danger"></span>
@@ -50,22 +75,6 @@
         <span asp-validation-for="ImageUrl" class="text-danger"></span>
     </div>
     <div class="form-group">
-        <label asp-for="State" class="control-label">Skelbimo būsena</label>
-        <select asp-for="State" class="form-control">
-            <option value="">Pasirinkite skelbimo būseną</option>
-            @foreach (var product in Enum.GetValues(typeof(Skelbimu_sistema.Models.ProductState)))
-            {
-                // Skip the "Suspended" option
-                if (product.ToString() != "Suspended")
-                {
-                    <option value="@product">@MapToLithuanian(product.ToString())</option>
-                }
-            }
-        </select>
-        <span asp-validation-for="State" class="text-danger"></span>
-    </div>
-
-    <div class="form-group">
         <label asp-for="Category" class="control-label">Kategorija</label>
         <select asp-for="Category" class="form-control">
             <option value="">Pasirinkite kategoriją</option>
@@ -76,6 +85,51 @@
         </select>
         <span asp-validation-for="Category" class="text-danger"></span>
     </div>
+    <div class="form-group">
+        <label asp-for="State" class="control-label">Skelbimo būsena</label>
+        <select asp-for="State" class="form-control" disabled="@(Model.State == ProductState.Suspended ? "disabled" : null)">
+            <option value="">Pasirinkite skelbimo būseną</option>
+            @if (Model.State == ProductState.Suspended)
+            {
+                <option value="@ProductState.Suspended" selected>Suspenduotas</option>
+            }
+            else
+            {
+                foreach (var state in Enum.GetValues(typeof(Skelbimu_sistema.Models.ProductState)))
+                {
+                    if (state.ToString() != "Suspended")
+                    {
+                        <option value="@state" selected="@(Model.State.Equals(state) ? "selected" : null)">
+                            @MapToLithuanian(state.ToString()!)
+                        </option>
+                    }
+                }
+            }
+        </select>
+        <span asp-validation-for="State" class="text-danger"></span>
+    </div>
+    @if (Model.State == ProductState.Suspended)
+    {
+        <div class="form-group">
+            <label class="control-label">Suspendavimo informacija</label>
+            <div class="form-group">
+                <input asp-for="SuspensionDate" class="form-control" disabled />
+            </div>
+            <div class="form-group">
+                <label asp-for="SuspensionReason" class="control-label">Suspendavimo priežąstis</label>
+                <input asp-for="SuspensionReason" class="form-control" disabled/>
+            </div>
+            <div class="form-group">
+                <label asp-for="SuspensionReviewed" class="form-check-label">Suspendavimas peržiūrėtas</label>
+                <input type="checkbox" asp-for="SuspensionReviewed" class="form-check-input" disabled />
+            </div>
+            <div class="form-group">
+                <label asp-for="SuspensionCorrected" class="form-check-label">Skelbimas pataisytas</label>
+                <input type="checkbox" asp-for="SuspensionCorrected" class="form-check-input" />
+            </div>
+        </div>
+    }
+
     <br>
     <button type="submit" class="btn btn-primary">Saugoti</button>
     <a asp-controller="Product" asp-action="ViewInventory" class="btn btn-secondary">Grįžti atgal</a>
