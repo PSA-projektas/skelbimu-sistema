@@ -23,7 +23,7 @@
 
 This project was programmed by four colleagues who had the task of implementing a system similar to Skelbiu.lt. 
 
-The system was programmed using ASP.NET framework and Sql server as database. In this project we also implemented a Gmail API connection and billing using Paypal API.
+The system was programmed using ASP.NET framework and Sql server as a database. In this project we also implemented a Gmail API connection and billing using Paypal API.
 <!-- Nuotraukos -->
 Main page.
 ![image](https://github.com/PSA-projektas/skelbimu-sistema/assets/93952366/d1eb2e77-a33f-4c7e-be16-2caeefa1d344)
