@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="https://github.com/PSA-projektas/skelbimu-sistema/assets/93952366/d4914ad6-d95d-431c-b256-a62a62462e8b" alt="Logo" width="150">
+</div>
+
 <h3 align="center">Online marketplace site</h3>
   <p align="center">
     Online marketplace site is a platform where users can conveniently post and browse listings for various electronic products, such as computers, laptops, and others. Users can create listings with detailed information about the products, including photos, specifications, and prices, and browse listings by categories and features. Most importantly, the system aims to ensure a convenient and secure environment for buying and selling electronic goods.
