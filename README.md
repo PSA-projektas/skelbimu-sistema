@@ -25,9 +25,14 @@ This project was programmed by four colleagues who had the task of implementing 
 
 The system was programmed using ASP.NET framework and Sql server as database. In this project we also implemented a Gmail API connection and billing using Paypal API.
 <!-- Nuotraukos -->
+Main page.
+![image](https://github.com/PSA-projektas/skelbimu-sistema/assets/93952366/d1eb2e77-a33f-4c7e-be16-2caeefa1d344)
 
 
+The registration and login page includes the implementation of a lost password feature.
+![image](https://github.com/PSA-projektas/skelbimu-sistema/assets/93952366/06fbee47-f45d-47b1-a58d-f99a4a13c8da)
 
+Also we have a listing page where you can create a new product listing. An administration page where you can see suspended listings and all other administration functions. An inventory page where a seller can see all the listings they have placed, edit their information and delete them. There is also a search engine and a search filter system. 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
