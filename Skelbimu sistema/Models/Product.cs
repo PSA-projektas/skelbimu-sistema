@@ -45,8 +45,9 @@ namespace Skelbimu_sistema.Models
 
     public enum ProductPaymentType
     {
-        Cash = 0,
-        Card = 1,
-        Transaction = 2
+        All = 0,
+        Cash = 1,
+        Card = 2,
+        Transaction = 3
     }
 }

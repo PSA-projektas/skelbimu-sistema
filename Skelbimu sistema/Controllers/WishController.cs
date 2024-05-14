@@ -473,7 +473,7 @@ namespace Skelbimu_sistema.Controllers
         /// <returns>Condition</returns>
         private bool ValidateProductPaymentType(Product product, Wish wish)
         {
-            if ((int)product.PaymentType == (int)wish.PaymentMethod - 1)
+            if ((int)product.PaymentType == (int)wish.PaymentMethod)
             {
                 return true;
             }
